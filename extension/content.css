@@ -187,7 +187,12 @@ html.ylp-mini-active .ylp-toolbar.ylp-docked { display: none !important; }
 }
 #ylp-overlay .ylp-controls button.ylp-cbtn:hover { background: rgba(255,255,255,.12); }
 #ylp-overlay .ylp-cbtn svg { width: 24px; height: 24px; fill: currentColor; }
-#ylp-overlay .ylp-cbtn.ylp-on { box-shadow: inset 0 -3px 0 -1px #f00; border-radius: 4px; }
+/* captions on: a short straight red bar under the CC icon (like YouTube) */
+#ylp-overlay .ylp-controls button.ylp-cbtn { position: relative; }
+#ylp-overlay .ylp-controls button.ylp-cbtn.ylp-on::after {
+  content: ""; position: absolute; left: 50%; bottom: 5px; width: 18px; height: 3px;
+  margin-left: -9px; border-radius: 2px; background: #f00;
+}
 #ylp-overlay .ylp-cbtn.ylp-speed { width: auto; padding: 0 8px; border-radius: 16px; }
 #ylp-overlay .ylp-time { font-size: 13px; margin-left: 6px; font-variant-numeric: tabular-nums; }
 #ylp-overlay .ylp-spacer { flex: 1; }
