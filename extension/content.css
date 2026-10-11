@@ -153,7 +153,11 @@ html.ylp-mini-active .ylp-toolbar.ylp-docked { display: none !important; }
   display: flex; flex-direction: column;
 }
 #ylp-overlay.ylp-idle .ylp-controls { opacity: 0; pointer-events: none; }
-#ylp-overlay.ylp-idle { cursor: none; }
+/* Our own cursor: otherwise we inherit "cursor: none" from YouTube's hidden player
+   (its .ytp-autohide), which never un-hides because it no longer gets mouse events. */
+#ylp-overlay, #ylp-overlay * { cursor: default !important; }
+#ylp-overlay button, #ylp-overlay select, #ylp-overlay .ylp-seek, #ylp-overlay .ylp-seek * { cursor: pointer !important; }
+#ylp-overlay.ylp-idle, #ylp-overlay.ylp-idle * { cursor: none !important; }
 
 #ylp-overlay .ylp-seek { position: relative; height: 18px; display: flex; align-items: center; cursor: pointer; touch-action: none; }
 #ylp-overlay .ylp-track { position: relative; width: 100%; height: 4px; border-radius: 2px; background: rgba(255,255,255,.25); transition: height .1s; }
