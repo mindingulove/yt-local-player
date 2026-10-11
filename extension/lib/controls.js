@@ -8,6 +8,13 @@
     pip: "M19 7h-8v6h8V7zm2-4H3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 16H3V5h18v14z",
     full: "M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z",
     exitFull: "M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z",
+    // toolbar
+    tune: "M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z",
+    mini: "M21 3H3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 16H3V5h18v14zm-10-7h9v6h-9z",
+    add: "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z",
+    download: "M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z",
+    star: "M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z",
+    chevron: "M7 10l5 5 5-5z",
   };
   const SPEEDS = [1, 1.25, 1.5, 1.75, 2, 0.5, 0.75];
 
@@ -299,5 +306,5 @@
     };
   }
 
-  globalThis.YLP = Object.assign(globalThis.YLP || {}, { createControls });
+  globalThis.YLP = Object.assign(globalThis.YLP || {}, { createControls, icon });
 })();

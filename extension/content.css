@@ -18,30 +18,61 @@
 #ylp-overlay { background-color: #000; background-size: contain; background-position: center; background-repeat: no-repeat; }
 #ylp-overlay .ylp-status { background: rgba(0,0,0,.65); padding: 10px 16px; border-radius: 12px; }
 
-/* Toolbar: docked under the player, right-aligned, YouTube-styled chips */
+/* Toolbar: YouTube-style pills (Roboto 14/500, 40px, Material icons).
+   Lives in the channel/actions row, between Subscribe and Like/Share. */
 .ylp-toolbar {
   display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap;
-  font: 12px -apple-system, "Roboto", sans-serif;
+  font: 500 14px/20px "Roboto", "Arial", sans-serif;
+  --ylp-chip: rgba(0,0,0,.05); --ylp-chip-hover: rgba(0,0,0,.1);
 }
+.ylp-toolbar.ylp-dark { --ylp-chip: rgba(255,255,255,.1); --ylp-chip-hover: rgba(255,255,255,.2); }
 .ylp-toolbar[hidden] { display: none !important; }
-.ylp-toolbar.ylp-docked { margin: 10px 0 2px; }
-/* colour is copied from the video title by JS, so it follows light/dark theme */
-.ylp-toolbar button,
-.ylp-toolbar select {
-  height: 30px; padding: 0 12px; border: 0; border-radius: 15px; cursor: pointer;
-  font: inherit; font-weight: 500; color: inherit;
-  background: color-mix(in srgb, currentColor 10%, transparent);
+/* In the row: take only the free space between channel and Like/Share, and scroll
+   sideways when it doesn't fit (never overlap Subscribe). Content is pushed right
+   with an auto margin, which unlike justify-content keeps the start scrollable. */
+.ylp-toolbar.ylp-in-row {
+  /* grows far faster than YouTube's #actions (flex-grow 1), so it gets the free space */
+  /* at least ~4 buttons stay visible; the rest scroll */
+  flex: 1000 1 0; min-width: 200px; align-self: flex-start; margin-left: 12px; margin-right: 8px;
 }
-.ylp-toolbar button:hover,
-.ylp-toolbar select:hover { background: color-mix(in srgb, currentColor 18%, transparent); }
-.ylp-toolbar select { max-width: 120px; text-overflow: ellipsis; }
-.ylp-toolbar span { opacity: .7; }
-.ylp-toolbar span:empty { display: none; }
-/* SponsorBlock: whole-video label + highlight button */
-.ylp-toolbar .ylp-sb { opacity: 1; display: flex; gap: 8px; align-items: center; margin-right: auto; }
+/* Both placements: one line, right-aligned, scrolls sideways if ever too narrow.
+   (An auto margin pushes content right; unlike justify-content it keeps the start scrollable.) */
+.ylp-toolbar.ylp-docked {
+  flex-wrap: nowrap; justify-content: flex-start;
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain;
+}
+.ylp-toolbar.ylp-docked::-webkit-scrollbar { display: none; }
+.ylp-toolbar.ylp-docked > :first-child { margin-left: auto; }
+.ylp-toolbar.ylp-docked > .ylp-sb:empty + * { margin-left: auto; }
+.ylp-toolbar.ylp-fade-start { -webkit-mask-image: linear-gradient(to right, transparent, #000 28px); mask-image: linear-gradient(to right, transparent, #000 28px); }
+.ylp-toolbar.ylp-fade-end { -webkit-mask-image: linear-gradient(to left, transparent, #000 28px); mask-image: linear-gradient(to left, transparent, #000 28px); }
+.ylp-toolbar.ylp-fade-start.ylp-fade-end { -webkit-mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
+.ylp-toolbar.ylp-docked:not(.ylp-in-row) { margin: 12px 0 0; }
+.ylp-toolbar .ylp-pill {
+  position: relative; display: inline-flex; align-items: center; gap: 6px; flex: none;
+  height: 40px; padding: 0 16px 0 12px; border: 0; border-radius: 20px;
+  background: var(--ylp-chip); color: inherit; font: inherit; cursor: pointer; white-space: nowrap;
+}
+.ylp-toolbar .ylp-pill:hover { background: var(--ylp-chip-hover); }
+.ylp-toolbar .ylp-pill[hidden] { display: none; }
+.ylp-toolbar .ylp-pill svg { width: 24px; height: 24px; fill: currentColor; flex: none; }
+.ylp-toolbar .ylp-icon-btn { width: 40px; padding: 0; justify-content: center; }
+.ylp-toolbar .ylp-icon-btn.ylp-busy { background: rgba(255,0,0,.18); }
+.ylp-toolbar .ylp-select { padding-right: 10px; }
+.ylp-toolbar .ylp-select svg:last-of-type { width: 20px; height: 20px; margin-left: -2px; opacity: .8; }
+/* the real <select> covers the pill invisibly, so clicking opens its menu */
+.ylp-toolbar .ylp-select select {
+  position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
+  -webkit-appearance: none; appearance: none; font: 14px "Roboto", "Arial", sans-serif;
+}
+.ylp-toolbar .ylp-save-progress { opacity: .7; }
+.ylp-toolbar .ylp-save-progress:empty { display: none; }
+/* SponsorBlock: whole-video label + highlight */
+.ylp-toolbar .ylp-sb { display: flex; gap: 8px; align-items: center; }
+.ylp-toolbar .ylp-sb:empty { display: none; }
 .ylp-toolbar .ylp-sb-label {
-  opacity: 1; height: 30px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 15px;
-  font-weight: 600; color: #fff; background: var(--sb-color, #00d400);
+  height: 40px; display: inline-flex; align-items: center; padding: 0 16px; border-radius: 20px;
+  font-weight: 500; color: #fff; background: var(--sb-color, #00d400); white-space: nowrap;
 }
 /* fallback when there is no #below: float inside the video, top-left */
 #ylp-overlay > .ylp-toolbar { position: absolute; top: 10px; left: 10px; }
@@ -198,3 +229,20 @@ html.ylp-mini-active .ylp-toolbar.ylp-docked { display: none !important; }
 .ylp-submit-msg:empty { display: none; }
 .ylp-submit-note { flex-basis: 100%; text-align: right; opacity: .65; font-size: 11px; }
 #ylp-overlay .ylp-toast button[title^="This segment"] { padding: 4px 8px; }
+
+/* one-time "it scrolls" tip under the toolbar */
+.ylp-scroll-hint {
+  position: absolute; z-index: 2300; display: flex; gap: 12px; align-items: center;
+  padding: 8px 8px 8px 14px; border-radius: 10px; background: #065fd4; color: #fff;
+  font: 500 13px/18px "Roboto", "Arial", sans-serif; box-shadow: 0 4px 16px rgba(0,0,0,.25);
+  animation: ylp-hint-in .25s ease-out;
+}
+.ylp-scroll-hint::before {
+  content: ""; position: absolute; top: -6px; left: 22px; width: 12px; height: 12px;
+  background: inherit; transform: rotate(45deg); border-radius: 2px;
+}
+.ylp-scroll-hint button {
+  border: 0; border-radius: 16px; padding: 6px 12px; background: #fff; color: #065fd4;
+  font: inherit; cursor: pointer;
+}
+@keyframes ylp-hint-in { from { opacity: 0; transform: translateY(-4px); } }

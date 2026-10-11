@@ -18,6 +18,7 @@
     sbMode: "auto", // "auto" skips; "ask" shows a Skip button
     sbExtras: true, // highlight button + whole-video labels
     saveEnabled: false, // Save (download) button is opt-in
+    scrollHintDismissed: false,
   };
   let currentId = null;
   let overlay = null; // {root, video, status, toolbar}
@@ -141,6 +142,7 @@
       overlay.root.remove();
       overlay.toolbar.remove();
       overlay.submitPanel?.remove();
+      overlay.scrollHint?.remove();
       overlay.trackEls?.forEach((el) => URL.revokeObjectURL(el.src));
     }
     ytPlayer()?.classList.remove("ylp-active");
@@ -176,6 +178,22 @@
     video.addEventListener("volumechange", fullVolume);
     const status = h("div", { class: "ylp-status" });
     const toolbar = h("div", { class: "ylp-toolbar", hidden: true });
+    // Scrollable bar: vertical wheel scrolls it sideways; fade the clipped edges.
+    const updateFades = () => {
+      toolbar.classList.toggle("ylp-fade-start", toolbar.scrollLeft > 2);
+      toolbar.classList.toggle("ylp-fade-end", toolbar.scrollLeft + toolbar.clientWidth < toolbar.scrollWidth - 2);
+    };
+    toolbar.addEventListener("scroll", updateFades);
+    new ResizeObserver(updateFades).observe(toolbar);
+    toolbar.addEventListener(
+      "wheel",
+      (e) => {
+        if (toolbar.scrollWidth <= toolbar.clientWidth || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+        e.preventDefault();
+        toolbar.scrollLeft += e.deltaY;
+      },
+      { passive: false }
+    );
     const minibar = h(
       "div",
       { class: "ylp-minibar" },
@@ -228,14 +246,106 @@
 
   // The toolbar sits under the player (above the title) so Safari's native
   // control bar can never cover it; falls back to inside the overlay.
+  // The toolbar sits in YouTube's channel/actions row (between Subscribe and
+  // Like/Share), else under the player, else inside the overlay.
   function placeToolbar() {
     if (!overlay) return;
-    const below = document.querySelector("ytd-watch-flexy #below");
-    const parent = below || overlay.root;
-    if (overlay.toolbar.parentNode !== parent) parent.prepend(overlay.toolbar);
-    overlay.toolbar.classList.toggle("ylp-docked", !!below);
+    const tb = overlay.toolbar;
+    const row = document.querySelector("ytd-watch-metadata #top-row");
+    const actions = row?.querySelector(":scope > #actions");
+    if (row && actions) {
+      if (tb.parentNode !== row || tb.nextElementSibling !== actions) row.insertBefore(tb, actions);
+      // Line up with YouTube's buttons: same top offset and height as #actions.
+      const a = getComputedStyle(actions);
+      tb.style.marginTop = a.marginTop;
+      tb.style.height = `${actions.offsetHeight}px`;
+    } else {
+      tb.style.marginTop = tb.style.height = "";
+      const parent = document.querySelector("ytd-watch-flexy #below") || overlay.root;
+      if (tb.parentNode !== parent) parent.prepend(tb);
+    }
+    const docked = tb.parentNode !== overlay.root;
+    tb.classList.toggle("ylp-docked", docked);
+    tb.classList.toggle("ylp-in-row", tb.parentNode === row);
+    // Follow YouTube's theme: copy the title colour, and pick its light/dark chip tint.
     const title = document.querySelector("ytd-watch-metadata h1, #title h1");
-    overlay.toolbar.style.color = below && title ? getComputedStyle(title).color : "";
+    const color = docked && title ? getComputedStyle(title).color : "";
+    const rgb = color.match(/\d+/g);
+    const dark = !docked || (rgb ? 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2] > 140 : false);
+    for (const el of [tb, overlay.submitPanel]) {
+      if (!el) continue;
+      el.style.color = color;
+      el.classList.toggle("ylp-dark", dark);
+    }
+    maybeShowScrollHint();
+  }
+
+  // First time the bar overflows, nudge it and show a tip until "Got it".
+  function maybeShowScrollHint() {
+    const tb = overlay?.toolbar;
+    if (!tb || tb.hidden || settings.scrollHintDismissed || tb.scrollWidth <= tb.clientWidth + 2) {
+      if (overlay?.scrollHint && tb && tb.scrollWidth <= tb.clientWidth + 2) hideScrollHint();
+      return;
+    }
+    if (!overlay.scrollHint) {
+      const dismiss = () => {
+        settings.scrollHintDismissed = true;
+        browser.storage.local.set({ scrollHintDismissed: true });
+        hideScrollHint();
+      };
+      overlay.scrollHint = h(
+        "div",
+        { class: "ylp-scroll-hint", role: "status" },
+        h("span", {}, "Scroll sideways for more buttons ›"),
+        h("button", { onclick: dismiss }, "Got it")
+      );
+      document.body.appendChild(overlay.scrollHint);
+      // Nudge: slide the bar a little and back so it visibly moves.
+      tb.scrollBy({ left: 56, behavior: "smooth" });
+      setTimeout(() => tb.scrollBy({ left: -56, behavior: "smooth" }), 700);
+    }
+    // Keep it pinned under the bar (page coordinates).
+    const r = tb.getBoundingClientRect();
+    Object.assign(overlay.scrollHint.style, {
+      top: `${r.bottom + window.scrollY + 8}px`,
+      left: `${Math.max(8, r.left + window.scrollX)}px`,
+    });
+  }
+
+  function hideScrollHint() {
+    overlay?.scrollHint?.remove();
+    if (overlay) overlay.scrollHint = null;
+  }
+
+  // YouTube-style pill button: icon + label, or a round icon-only button
+  // (iconOnly: true) whose label becomes its tooltip.
+  function pill(iconName, label, { iconOnly = false, ...props } = {}) {
+    if (iconOnly) return h("button", { class: "ylp-pill ylp-icon-btn", title: label, "aria-label": label, ...props }, YLP.icon(iconName));
+    return h("button", { class: "ylp-pill", ...props }, iconName ? YLP.icon(iconName) : null, h("span", { class: "ylp-pill-label" }, label));
+  }
+  const setPillLabel = (btn, text) => {
+    const label = btn.querySelector(".ylp-pill-label");
+    if (label) label.textContent = text;
+    else btn.title = text;
+  };
+
+  // A pill that shows the current choice and opens a native menu (an invisible
+  // <select> laid over it). options: [{value, label, short?}]
+  function selectPill(iconName, title, options, current, onchange) {
+    const text = h("span", { class: "ylp-pill-label" });
+    const select = h(
+      "select",
+      { title },
+      options.map((o) => h("option", { value: o.value, selected: String(o.value) === String(current) }, o.label))
+    );
+    const sync = () => {
+      const o = options.find((x) => String(x.value) === select.value);
+      text.textContent = o ? o.short || o.label : "";
+    };
+    select.addEventListener("change", () => (sync(), onchange(select.value)));
+    sync();
+    const wrap = h("label", { class: "ylp-pill ylp-select", title }, YLP.icon(iconName), text, YLP.icon("chevron"), select);
+    return { wrap, select, sync };
   }
 
   function showVideo() {
@@ -375,49 +485,47 @@
   // ---- toolbar: quality, captions, save ------------------------------------
 
   function buildToolbar() {
-    const current = selectedQuality();
-    const quality = h(
-      "select",
-      {
-        title: "Quality",
-        onchange: (e) => {
-          const v = e.target.value;
-          settings.quality = v === "auto" ? "auto" : +v;
-          browser.storage.local.set({ quality: settings.quality });
-          applyQuality(settings.quality);
-        },
-      },
-      qualityChoices().map((c) =>
-        h("option", { value: c, selected: c === current }, c === "auto" ? "Auto" : `${c}p`)
-      )
+    const quality = selectPill(
+      "tune",
+      "Quality",
+      qualityChoices().map((c) => ({ value: c, label: c === "auto" ? "Auto" : `${c}p` })),
+      selectedQuality(),
+      (v) => {
+        settings.quality = v === "auto" ? "auto" : +v;
+        browser.storage.local.set({ quality: settings.quality });
+        applyQuality(settings.quality);
+      }
     );
 
     const pref = preferredCaption();
-    const cc = h(
-      "select",
-      {
-        title: "Captions (c)",
-        hidden: !info.captions.length,
-        onchange: (e) => {
-          const t = info.captions[+e.target.value] || null;
-          settings.captions = t ? t.lang : "off";
-          browser.storage.local.set({ captions: settings.captions });
-          applyCaptions(t);
-        },
-      },
-      h("option", { value: "off" }, "CC"),
-      info.captions.map((t, i) => h("option", { value: i, selected: t === pref }, t.name))
+    const cc = selectPill(
+      "cc",
+      "Captions (c)",
+      [
+        { value: "off", label: "Off", short: "CC" },
+        ...info.captions.map((t, i) => ({ value: i, label: t.name, short: t.lang.split("-")[0].toUpperCase() })),
+      ],
+      pref ? info.captions.indexOf(pref) : "off",
+      (v) => {
+        const t = info.captions[+v] || null;
+        settings.captions = t ? t.lang : "off";
+        browser.storage.local.set({ captions: settings.captions });
+        applyCaptions(t);
+      }
     );
+    cc.wrap.hidden = !info.captions.length;
+    overlay.ccSelect = cc.select;
+    overlay.ccSync = cc.sync;
 
-    overlay.saveLabel = h("span");
-    overlay.saveBtn = h("button", { onclick: save, title: "Save as mp4" });
-    overlay.ccSelect = cc;
-    const mini = h("button", { title: "Mini player (i)", onclick: () => enterMini() }, "⧉ Mini");
+    overlay.saveLabel = h("span", { class: "ylp-save-progress" });
+    overlay.saveBtn = pill("download", "Save as mp4", { iconOnly: true, onclick: save });
+    const mini = pill("mini", "Mini player (i)", { iconOnly: true, onclick: () => enterMini() });
+    const addSegment = pill("add", "Submit a SponsorBlock segment", { iconOnly: true, onclick: openSubmitPanel, hidden: !settings.sponsorBlock });
     overlay.sbSlot = h("span", { class: "ylp-sb" });
-    const addSegment = h("button", { title: "Submit a SponsorBlock segment", onclick: openSubmitPanel, hidden: !settings.sponsorBlock }, "＋ Segment");
-    overlay.toolbar.replaceChildren(overlay.sbSlot, quality, cc, mini, addSegment, overlay.saveBtn, overlay.saveLabel);
+    overlay.toolbar.replaceChildren(overlay.sbSlot, quality.wrap, cc.wrap, mini, addSegment, overlay.saveBtn, overlay.saveLabel);
     renderSponsorUi();
     overlay.toolbar.hidden = false;
+    placeToolbar();
     renderSaveButton();
   }
 
@@ -440,7 +548,10 @@
     const video = overlay.video;
     overlay.caption = track;
     overlay.controls.setCaptionsOn(!!track);
-    if (overlay.ccSelect) overlay.ccSelect.value = track ? String(info.captions.indexOf(track)) : "off";
+    if (overlay.ccSelect) {
+      overlay.ccSelect.value = track ? String(info.captions.indexOf(track)) : "off";
+      overlay.ccSync?.();
+    }
     for (const t of video.textTracks) t.mode = "disabled";
     if (!track) return;
     overlay.trackEls ??= new Map();
@@ -498,7 +609,8 @@
     btn.hidden = !settings.saveEnabled || !video || !audio || info.isLive;
     if (btn.hidden) return;
     const mb = (+video.contentLength + +audio.contentLength) / 1e6;
-    btn.textContent = `⤓ ${video.height}p · ${mb.toFixed(0)} MB`;
+    setPillLabel(btn, `Save ${video.height}p as mp4 (${mb.toFixed(0)} MB)`);
+    btn.classList.remove("ylp-busy");
   }
 
   async function save() {
@@ -511,7 +623,8 @@
     const { saveBtn: btn, saveLabel: label } = overlay;
     saveAbort = new AbortController();
     const signal = saveAbort.signal;
-    btn.textContent = "Cancel";
+    setPillLabel(btn, "Cancel download");
+    btn.classList.add("ylp-busy");
     let got = 0;
     const progress = (n) => {
       got += n;
@@ -777,7 +890,7 @@
       parts.push(h("span", { class: "ylp-sb-label", title: "SponsorBlock whole-video label", style: `--sb-color: ${label[1]}` }, label[0]));
     }
     if (overlay.highlight) {
-      parts.push(h("button", { title: "Jump to the highlight (SponsorBlock)", onclick: jumpToHighlight }, "★ Highlight"));
+      parts.push(pill("star", "Jump to the highlight (SponsorBlock)", { iconOnly: true, onclick: jumpToHighlight }));
     }
     slot.replaceChildren(...parts);
   }
@@ -904,9 +1017,9 @@
       msg,
       h("div", { class: "ylp-submit-note" }, "Submissions are public and used by everyone — only mark segments you're sure about.")
     );
-    panel.style.color = overlay.toolbar.style.color;
     overlay.submitPanel = panel;
-    overlay.toolbar.after(panel);
+    (overlay.toolbar.closest("#top-row") || overlay.toolbar).after(panel);
+    placeToolbar(); // applies the theme colour to the panel
     endIn.focus();
   }
 
