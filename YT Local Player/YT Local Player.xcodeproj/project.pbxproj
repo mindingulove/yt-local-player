@@ -1,0 +1,605 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 110;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		6EAD5B78307A9E950065AEFF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EAD5B77307A9E950065AEFF /* AppDelegate.swift */; };
+		6EAD5B7C307A9E950065AEFF /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = 6EAD5B7A307A9E950065AEFF /* Main.html */; };
+		6EAD5B7E307A9E950065AEFF /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 6EAD5B7D307A9E950065AEFF /* Icon.png */; };
+		6EAD5B80307A9E950065AEFF /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = 6EAD5B7F307A9E950065AEFF /* Style.css */; };
+		6EAD5B82307A9E950065AEFF /* Script.js in Resources */ = {isa = PBXBuildFile; fileRef = 6EAD5B81307A9E950065AEFF /* Script.js */; };
+		6EAD5B84307A9E950065AEFF /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EAD5B83307A9E950065AEFF /* ViewController.swift */; };
+		6EAD5B87307A9E950065AEFF /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6EAD5B85307A9E950065AEFF /* Main.storyboard */; };
+		6EAD5B89307A9E960065AEFF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6EAD5B88307A9E960065AEFF /* Assets.xcassets */; };
+		6EAD5B90307A9E960065AEFF /* YT Local Player Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 6EAD5B8F307A9E960065AEFF /* YT Local Player Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		6EAD5B95307A9E960065AEFF /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EAD5B94307A9E960065AEFF /* SafariWebExtensionHandler.swift */; };
+		6EAD5BA8307A9E960065AEFF /* popup.js in Resources */ = {isa = PBXBuildFile; fileRef = 6EAD5BA1307A9E960065AEFF /* popup.js */; };
+		6EAD5BA9307A9E960065AEFF /* content.css in Resources */ = {isa = PBXBuildFile; fileRef = 6EAD5BA2307A9E960065AEFF /* content.css */; };
+		6EAD5BAA307A9E960065AEFF /* background.js in Resources */ = {isa = PBXBuildFile; fileRef = 6EAD5BA3307A9E960065AEFF /* background.js */; };
+		6EAD5BAB307A9E960065AEFF /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = 6EAD5BA4307A9E960065AEFF /* popup.html */; };
+		6EAD5BAC307A9E960065AEFF /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 6EAD5BA5307A9E960065AEFF /* manifest.json */; };
+		6EAD5BAD307A9E960065AEFF /* lib in Resources */ = {isa = PBXBuildFile; fileRef = 6EAD5BA6307A9E960065AEFF /* lib */; };
+		6EAD5BAE307A9E960065AEFF /* content.js in Resources */ = {isa = PBXBuildFile; fileRef = 6EAD5BA7307A9E960065AEFF /* content.js */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		6EAD5B91307A9E960065AEFF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6EAD5B6C307A9E940065AEFF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6EAD5B8E307A9E960065AEFF;
+			remoteInfo = "YT Local Player Extension";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		6EAD5B9C307A9E960065AEFF /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				6EAD5B90307A9E960065AEFF /* YT Local Player Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		6EAD5B74307A9E940065AEFF /* YT Local Player.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "YT Local Player.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6EAD5B77307A9E950065AEFF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		6EAD5B7B307A9E950065AEFF /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Base.lproj/Main.html; sourceTree = "<group>"; };
+		6EAD5B7D307A9E950065AEFF /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
+		6EAD5B7F307A9E950065AEFF /* Style.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = Style.css; sourceTree = "<group>"; };
+		6EAD5B81307A9E950065AEFF /* Script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Script.js; sourceTree = "<group>"; };
+		6EAD5B83307A9E950065AEFF /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		6EAD5B86307A9E950065AEFF /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		6EAD5B88307A9E960065AEFF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		6EAD5B8A307A9E960065AEFF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6EAD5B8F307A9E960065AEFF /* YT Local Player Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "YT Local Player Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6EAD5B94307A9E960065AEFF /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
+		6EAD5B96307A9E960065AEFF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6EAD5BA1307A9E960065AEFF /* popup.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = popup.js; path = ../../extension/popup.js; sourceTree = "<group>"; };
+		6EAD5BA2307A9E960065AEFF /* content.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; name = content.css; path = ../../extension/content.css; sourceTree = "<group>"; };
+		6EAD5BA3307A9E960065AEFF /* background.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = background.js; path = ../../extension/background.js; sourceTree = "<group>"; };
+		6EAD5BA4307A9E960065AEFF /* popup.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = popup.html; path = ../../extension/popup.html; sourceTree = "<group>"; };
+		6EAD5BA5307A9E960065AEFF /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../../extension/manifest.json; sourceTree = "<group>"; };
+		6EAD5BA6307A9E960065AEFF /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = ../../extension/lib; sourceTree = "<group>"; };
+		6EAD5BA7307A9E960065AEFF /* content.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = content.js; path = ../../extension/content.js; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6EAD5B71307A9E940065AEFF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		6EAD5B8C307A9E960065AEFF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		6EAD5B6B307A9E940065AEFF = {
+			isa = PBXGroup;
+			children = (
+				6EAD5B76307A9E940065AEFF /* YT Local Player */,
+				6EAD5B93307A9E960065AEFF /* YT Local Player Extension */,
+				6EAD5B75307A9E940065AEFF /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		6EAD5B75307A9E940065AEFF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6EAD5B74307A9E940065AEFF /* YT Local Player.app */,
+				6EAD5B8F307A9E960065AEFF /* YT Local Player Extension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6EAD5B76307A9E940065AEFF /* YT Local Player */ = {
+			isa = PBXGroup;
+			children = (
+				6EAD5B77307A9E950065AEFF /* AppDelegate.swift */,
+				6EAD5B83307A9E950065AEFF /* ViewController.swift */,
+				6EAD5B85307A9E950065AEFF /* Main.storyboard */,
+				6EAD5B88307A9E960065AEFF /* Assets.xcassets */,
+				6EAD5B8A307A9E960065AEFF /* Info.plist */,
+				6EAD5B79307A9E950065AEFF /* Resources */,
+			);
+			path = "YT Local Player";
+			sourceTree = "<group>";
+		};
+		6EAD5B79307A9E950065AEFF /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				6EAD5B7A307A9E950065AEFF /* Main.html */,
+				6EAD5B7D307A9E950065AEFF /* Icon.png */,
+				6EAD5B7F307A9E950065AEFF /* Style.css */,
+				6EAD5B81307A9E950065AEFF /* Script.js */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		6EAD5B93307A9E960065AEFF /* YT Local Player Extension */ = {
+			isa = PBXGroup;
+			children = (
+				6EAD5BA0307A9E960065AEFF /* Resources */,
+				6EAD5B94307A9E960065AEFF /* SafariWebExtensionHandler.swift */,
+				6EAD5B96307A9E960065AEFF /* Info.plist */,
+			);
+			path = "YT Local Player Extension";
+			sourceTree = "<group>";
+		};
+		6EAD5BA0307A9E960065AEFF /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				6EAD5BA1307A9E960065AEFF /* popup.js */,
+				6EAD5BA2307A9E960065AEFF /* content.css */,
+				6EAD5BA3307A9E960065AEFF /* background.js */,
+				6EAD5BA4307A9E960065AEFF /* popup.html */,
+				6EAD5BA5307A9E960065AEFF /* manifest.json */,
+				6EAD5BA6307A9E960065AEFF /* lib */,
+				6EAD5BA7307A9E960065AEFF /* content.js */,
+			);
+			name = Resources;
+			path = "YT Local Player Extension";
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6EAD5B73307A9E940065AEFF /* YT Local Player */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6EAD5B9D307A9E960065AEFF /* Build configuration list for PBXNativeTarget "YT Local Player" */;
+			buildPhases = (
+				6EAD5B70307A9E940065AEFF /* Sources */,
+				6EAD5B71307A9E940065AEFF /* Frameworks */,
+				6EAD5B72307A9E940065AEFF /* Resources */,
+				6EAD5B9C307A9E960065AEFF /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6EAD5B92307A9E960065AEFF /* PBXTargetDependency */,
+			);
+			name = "YT Local Player";
+			productName = "YT Local Player";
+			productReference = 6EAD5B74307A9E940065AEFF /* YT Local Player.app */;
+			productType = "com.apple.product-type.application";
+		};
+		6EAD5B8E307A9E960065AEFF /* YT Local Player Extension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6EAD5B99307A9E960065AEFF /* Build configuration list for PBXNativeTarget "YT Local Player Extension" */;
+			buildPhases = (
+				6EAD5B8B307A9E960065AEFF /* Sources */,
+				6EAD5B8C307A9E960065AEFF /* Frameworks */,
+				6EAD5B8D307A9E960065AEFF /* Resources */,
+			);
+			buildRules = (
+			);
+			name = "YT Local Player Extension";
+			productName = "YT Local Player Extension";
+			productReference = 6EAD5B8F307A9E960065AEFF /* YT Local Player Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6EAD5B6C307A9E940065AEFF /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2700;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					6EAD5B73307A9E940065AEFF = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					6EAD5B8E307A9E960065AEFF = {
+						CreatedOnToolsVersion = 27.0;
+					};
+				};
+			};
+			buildConfigurationList = 6EAD5B6F307A9E940065AEFF /* Build configuration list for PBXProject "YT Local Player" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 6EAD5B6B307A9E940065AEFF;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 6EAD5B75307A9E940065AEFF /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6EAD5B73307A9E940065AEFF /* YT Local Player */,
+				6EAD5B8E307A9E960065AEFF /* YT Local Player Extension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		6EAD5B72307A9E940065AEFF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				6EAD5B7E307A9E950065AEFF /* Icon.png in Resources */,
+				6EAD5B87307A9E950065AEFF /* Main.storyboard in Resources */,
+				6EAD5B82307A9E950065AEFF /* Script.js in Resources */,
+				6EAD5B7C307A9E950065AEFF /* Main.html in Resources */,
+				6EAD5B89307A9E960065AEFF /* Assets.xcassets in Resources */,
+				6EAD5B80307A9E950065AEFF /* Style.css in Resources */,
+			);
+		};
+		6EAD5B8D307A9E960065AEFF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				6EAD5BAD307A9E960065AEFF /* lib in Resources */,
+				6EAD5BA8307A9E960065AEFF /* popup.js in Resources */,
+				6EAD5BAB307A9E960065AEFF /* popup.html in Resources */,
+				6EAD5BAC307A9E960065AEFF /* manifest.json in Resources */,
+				6EAD5BAA307A9E960065AEFF /* background.js in Resources */,
+				6EAD5BAE307A9E960065AEFF /* content.js in Resources */,
+				6EAD5BA9307A9E960065AEFF /* content.css in Resources */,
+			);
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6EAD5B70307A9E940065AEFF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				6EAD5B84307A9E950065AEFF /* ViewController.swift in Sources */,
+				6EAD5B78307A9E950065AEFF /* AppDelegate.swift in Sources */,
+			);
+		};
+		6EAD5B8B307A9E960065AEFF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				6EAD5B95307A9E960065AEFF /* SafariWebExtensionHandler.swift in Sources */,
+			);
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		6EAD5B92307A9E960065AEFF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6EAD5B8E307A9E960065AEFF /* YT Local Player Extension */;
+			targetProxy = 6EAD5B91307A9E960065AEFF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		6EAD5B7A307A9E950065AEFF /* Main.html */ = {
+			isa = PBXVariantGroup;
+			children = (
+				6EAD5B7B307A9E950065AEFF /* Base */,
+			);
+			name = Main.html;
+			sourceTree = "<group>";
+		};
+		6EAD5B85307A9E950065AEFF /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				6EAD5B86307A9E950065AEFF /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		6EAD5B97307A9E960065AEFF /* Debug configuration for PBXProject "YT Local Player" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		6EAD5B98307A9E960065AEFF /* Release configuration for PBXProject "YT Local Player" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		6EAD5B9A307A9E960065AEFF /* Debug configuration for PBXNativeTarget "YT Local Player Extension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "YT Local Player Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "YT Local Player Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				BUNDLE_ID_PREFIX = io.github.example;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX).ytlocalplayer.Extension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		6EAD5B9B307A9E960065AEFF /* Release configuration for PBXNativeTarget "YT Local Player Extension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "YT Local Player Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "YT Local Player Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				BUNDLE_ID_PREFIX = io.github.example;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX).ytlocalplayer.Extension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		6EAD5B9E307A9E960065AEFF /* Debug configuration for PBXNativeTarget "YT Local Player" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "YT Local Player/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "YT Local Player";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				INFOPLIST_KEY_NSViewGestureRecognizerIsExclusive = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				BUNDLE_ID_PREFIX = io.github.example;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX).ytlocalplayer";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		6EAD5B9F307A9E960065AEFF /* Release configuration for PBXNativeTarget "YT Local Player" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "YT Local Player/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "YT Local Player";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				INFOPLIST_KEY_NSViewGestureRecognizerIsExclusive = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				BUNDLE_ID_PREFIX = io.github.example;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX).ytlocalplayer";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6EAD5B6F307A9E940065AEFF /* Build configuration list for PBXProject "YT Local Player" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6EAD5B97307A9E960065AEFF /* Debug configuration for PBXProject "YT Local Player" */,
+				6EAD5B98307A9E960065AEFF /* Release configuration for PBXProject "YT Local Player" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		6EAD5B99307A9E960065AEFF /* Build configuration list for PBXNativeTarget "YT Local Player Extension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6EAD5B9A307A9E960065AEFF /* Debug configuration for PBXNativeTarget "YT Local Player Extension" */,
+				6EAD5B9B307A9E960065AEFF /* Release configuration for PBXNativeTarget "YT Local Player Extension" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		6EAD5B9D307A9E960065AEFF /* Build configuration list for PBXNativeTarget "YT Local Player" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6EAD5B9E307A9E960065AEFF /* Debug configuration for PBXNativeTarget "YT Local Player" */,
+				6EAD5B9F307A9E960065AEFF /* Release configuration for PBXNativeTarget "YT Local Player" */,
+			);
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 6EAD5B6C307A9E940065AEFF /* Project object */;
+	validationLevel = 1;
+}

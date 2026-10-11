@@ -1,0 +1,200 @@
+#ylp-overlay {
+  position: absolute; inset: 0; z-index: 2147483000;
+  background: #000; color: #eee;
+  display: flex; align-items: center; justify-content: center;
+  font: 15px -apple-system, "Roboto", sans-serif;
+}
+#ylp-overlay [hidden] { display: none !important; }
+#ylp-overlay video { width: 100%; height: 100%; background: #000; }
+#ylp-overlay .ylp-status { text-align: center; max-width: 80%; }
+#ylp-overlay .ylp-bar { width: 320px; max-width: 100%; height: 4px; background: #333; margin: 12px auto; border-radius: 2px; overflow: hidden; }
+#ylp-overlay .ylp-bar > div { height: 100%; width: 0; background: #f00; transition: width .3s; }
+#ylp-overlay pre { white-space: pre-wrap; font-size: 11px; color: #aaa; text-align: left; max-height: 120px; overflow: auto; }
+#ylp-overlay .ylp-buttons { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+#ylp-overlay button { background: #333; color: #fff; border: 0; border-radius: 16px; padding: 6px 14px; cursor: pointer; font: inherit; font-size: 13px; }
+#ylp-overlay button:hover { background: #444; }
+#ylp-overlay video { object-fit: contain; object-position: center; }
+/* the video's thumbnail shows behind "Loading…" until playback starts */
+#ylp-overlay { background-color: #000; background-size: contain; background-position: center; background-repeat: no-repeat; }
+#ylp-overlay .ylp-status { background: rgba(0,0,0,.65); padding: 10px 16px; border-radius: 12px; }
+
+/* Toolbar: docked under the player, right-aligned, YouTube-styled chips */
+.ylp-toolbar {
+  display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap;
+  font: 12px -apple-system, "Roboto", sans-serif;
+}
+.ylp-toolbar[hidden] { display: none !important; }
+.ylp-toolbar.ylp-docked { margin: 10px 0 2px; }
+/* colour is copied from the video title by JS, so it follows light/dark theme */
+.ylp-toolbar button,
+.ylp-toolbar select {
+  height: 30px; padding: 0 12px; border: 0; border-radius: 15px; cursor: pointer;
+  font: inherit; font-weight: 500; color: inherit;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+.ylp-toolbar button:hover,
+.ylp-toolbar select:hover { background: color-mix(in srgb, currentColor 18%, transparent); }
+.ylp-toolbar select { max-width: 120px; text-overflow: ellipsis; }
+.ylp-toolbar span { opacity: .7; }
+.ylp-toolbar span:empty { display: none; }
+/* SponsorBlock: whole-video label + highlight button */
+.ylp-toolbar .ylp-sb { opacity: 1; display: flex; gap: 8px; align-items: center; margin-right: auto; }
+.ylp-toolbar .ylp-sb-label {
+  opacity: 1; height: 30px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 15px;
+  font-weight: 600; color: #fff; background: var(--sb-color, #00d400);
+}
+/* fallback when there is no #below: float inside the video, top-left */
+#ylp-overlay > .ylp-toolbar { position: absolute; top: 10px; left: 10px; }
+#ylp-overlay > .ylp-toolbar button, #ylp-overlay > .ylp-toolbar select { background: rgba(0,0,0,.6); color: #fff; }
+/* hide YouTube's own player UI (ads included) behind ours */
+#movie_player.ylp-active > :not(#ylp-overlay) { visibility: hidden !important; }
+
+/* SponsorBlock skip notice */
+#ylp-overlay .ylp-toast {
+  position: absolute; top: 12px; left: 12px; z-index: 2;
+  display: flex; gap: 10px; align-items: center;
+  background: rgba(0,0,0,.75); color: #fff; padding: 6px 6px 6px 12px; border-radius: 16px; font-size: 13px;
+}
+#ylp-overlay .ylp-toast button { padding: 4px 10px; font-size: 12px; }
+
+/* ---- Hide ads (html.ylp-hide-ads) ------------------------------------------
+   Whole cards are hidden so feed/search grids close up without gaps. */
+html.ylp-hide-ads ytd-rich-item-renderer:has(ytd-ad-slot-renderer),
+html.ylp-hide-ads ytd-ad-slot-renderer,
+html.ylp-hide-ads ytd-in-feed-ad-layout-renderer,
+html.ylp-hide-ads ytd-search-pyv-renderer,
+html.ylp-hide-ads ytd-promoted-sparkles-web-renderer,
+html.ylp-hide-ads ytd-promoted-video-renderer,
+html.ylp-hide-ads ytd-display-ad-renderer,
+html.ylp-hide-ads ytd-carousel-ad-renderer,
+html.ylp-hide-ads ytd-banner-promo-renderer,
+html.ylp-hide-ads ytd-statement-banner-renderer,
+html.ylp-hide-ads ytd-rich-section-renderer:has(ytd-statement-banner-renderer, ytd-banner-promo-renderer),
+html.ylp-hide-ads ytd-brand-video-singleton-renderer,
+html.ylp-hide-ads ytd-merch-shelf-renderer,
+html.ylp-hide-ads ytd-companion-slot-renderer,
+html.ylp-hide-ads ytd-action-companion-ad-renderer,
+html.ylp-hide-ads ytd-player-legacy-desktop-watch-ads-renderer,
+html.ylp-hide-ads ytd-engagement-panel-section-list-renderer[target-id="engagement-panel-ads"],
+html.ylp-hide-ads #masthead-ad,
+html.ylp-hide-ads #player-ads,
+html.ylp-hide-ads yt-lockup-view-model:has(feed-ad-metadata-view-model, ad-badge-view-model) { display: none !important; }
+
+/* ---- Hide Shorts (html.ylp-hide-shorts) ------------------------------------ */
+html.ylp-hide-shorts ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts]),
+html.ylp-hide-shorts ytd-rich-shelf-renderer[is-shorts],
+html.ylp-hide-shorts ytd-reel-shelf-renderer,
+html.ylp-hide-shorts grid-shelf-view-model:has(ytm-shorts-lockup-view-model, ytm-shorts-lockup-view-model-v2),
+html.ylp-hide-shorts ytd-item-section-renderer:has(> #contents > grid-shelf-view-model ytm-shorts-lockup-view-model):not(:has(ytd-video-renderer)),
+html.ylp-hide-shorts ytd-rich-item-renderer:has(ytm-shorts-lockup-view-model, a[href^="/shorts/"]),
+html.ylp-hide-shorts ytd-video-renderer:has(a[href^="/shorts/"]),
+html.ylp-hide-shorts ytd-compact-video-renderer:has(a[href^="/shorts/"]),
+html.ylp-hide-shorts yt-lockup-view-model:has(a[href^="/shorts/"]),
+html.ylp-hide-shorts ytd-guide-entry-renderer:has(a[title="Shorts"]),
+html.ylp-hide-shorts ytd-mini-guide-entry-renderer[aria-label="Shorts"],
+html.ylp-hide-shorts yt-tab-shape[tab-title="Shorts"],
+html.ylp-hide-shorts ytd-notification-renderer:has(a[href^="/shorts/"]) { display: none !important; }
+
+/* ---- Mini player (i) ------------------------------------------------------- */
+#ylp-overlay.ylp-mini {
+  position: fixed; inset: auto 16px 16px auto;
+  width: 420px; max-width: calc(100vw - 32px); height: auto; aspect-ratio: 16 / 9;
+  border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,.45);
+}
+#ylp-overlay .ylp-minibar { display: none; }
+#ylp-overlay.ylp-mini .ylp-minibar {
+  display: flex; gap: 6px; position: absolute; top: 8px; left: 8px; z-index: 3;
+  opacity: 0; transition: opacity .2s;
+}
+#ylp-overlay.ylp-mini:hover .ylp-minibar { opacity: 1; }
+#ylp-overlay .ylp-minibar button { background: rgba(0,0,0,.65); width: 30px; height: 30px; padding: 0; font-size: 14px; }
+/* our mini player replaces YouTube's */
+html.ylp-mini-active ytd-miniplayer { display: none !important; }
+html.ylp-mini-active .ylp-toolbar.ylp-docked { display: none !important; }
+
+/* ---- Custom controls (lib/controls.js) ---------------------------------------- */
+#ylp-overlay video[hidden] ~ .ylp-controls { display: none; }
+#ylp-overlay .ylp-controls {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+  padding: 24px 12px 4px; color: #fff;
+  background: linear-gradient(transparent, rgba(0,0,0,.75));
+  transition: opacity .25s;
+  display: flex; flex-direction: column;
+}
+#ylp-overlay.ylp-idle .ylp-controls { opacity: 0; pointer-events: none; }
+#ylp-overlay.ylp-idle { cursor: none; }
+
+#ylp-overlay .ylp-seek { position: relative; height: 18px; display: flex; align-items: center; cursor: pointer; touch-action: none; }
+#ylp-overlay .ylp-track { position: relative; width: 100%; height: 4px; border-radius: 2px; background: rgba(255,255,255,.25); transition: height .1s; }
+#ylp-overlay .ylp-seek:hover .ylp-track, #ylp-overlay .ylp-seek.ylp-drag .ylp-track { height: 7px; }
+#ylp-overlay .ylp-buffered, #ylp-overlay .ylp-played { position: absolute; left: 0; top: 0; bottom: 0; border-radius: inherit; }
+#ylp-overlay .ylp-buffered { background: rgba(255,255,255,.45); }
+#ylp-overlay .ylp-played { background: #f00; }
+#ylp-overlay .ylp-markers { position: absolute; inset: 0; }
+#ylp-overlay .ylp-marker { position: absolute; top: 0; bottom: 0; opacity: .9; }
+#ylp-overlay .ylp-marker.ylp-point { width: 4px; margin-left: -2px; top: -2px; bottom: -2px; border-radius: 2px; }
+#ylp-overlay .ylp-knob {
+  position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%;
+  background: #f00; transform: scale(0); transition: transform .1s;
+}
+#ylp-overlay .ylp-seek:hover .ylp-knob, #ylp-overlay .ylp-seek.ylp-drag .ylp-knob { transform: scale(1); }
+
+#ylp-overlay .ylp-preview {
+  position: absolute; bottom: 24px; transform: translateX(-50%);
+  display: none; flex-direction: column; align-items: center; pointer-events: none;
+}
+#ylp-overlay .ylp-seek:hover .ylp-preview, #ylp-overlay .ylp-seek.ylp-drag .ylp-preview { display: flex; }
+#ylp-overlay .ylp-preview-img { border: 2px solid #fff; border-radius: 6px; background-color: #000; background-repeat: no-repeat; box-shadow: 0 2px 10px rgba(0,0,0,.5); }
+#ylp-overlay .ylp-preview-label { font-size: 12px; font-weight: 600; margin-top: 4px; text-shadow: 0 0 4px #000; }
+#ylp-overlay .ylp-preview-label:empty { display: none; }
+#ylp-overlay .ylp-preview-time { font-size: 13px; font-weight: 600; margin-top: 2px; text-shadow: 0 0 4px #000; font-variant-numeric: tabular-nums; }
+
+#ylp-overlay .ylp-row { display: flex; align-items: center; gap: 2px; height: 40px; }
+#ylp-overlay .ylp-controls button.ylp-cbtn {
+  background: none; border: 0; color: #fff; width: 38px; height: 38px; padding: 0;
+  display: grid; place-items: center; cursor: pointer; border-radius: 50%; font-size: 13px; font-weight: 600;
+}
+#ylp-overlay .ylp-controls button.ylp-cbtn:hover { background: rgba(255,255,255,.12); }
+#ylp-overlay .ylp-cbtn svg { width: 24px; height: 24px; fill: currentColor; }
+#ylp-overlay .ylp-cbtn.ylp-on { box-shadow: inset 0 -3px 0 -1px #f00; border-radius: 4px; }
+#ylp-overlay .ylp-cbtn.ylp-speed { width: auto; padding: 0 8px; border-radius: 16px; }
+#ylp-overlay .ylp-time { font-size: 13px; margin-left: 6px; font-variant-numeric: tabular-nums; }
+#ylp-overlay .ylp-spacer { flex: 1; }
+
+/* buffering spinner */
+#ylp-overlay .ylp-spinner {
+  display: none; position: absolute; top: 50%; left: 50%; width: 48px; height: 48px; margin: -24px 0 0 -24px;
+  border: 4px solid rgba(255,255,255,.25); border-top-color: #fff; border-radius: 50%;
+  animation: ylp-spin .8s linear infinite; pointer-events: none; z-index: 1;
+}
+#ylp-overlay.ylp-buffering .ylp-spinner { display: block; }
+@keyframes ylp-spin { to { transform: rotate(360deg); } }
+
+/* fullscreen: our overlay (not the bare <video>) goes fullscreen so controls stay */
+#ylp-overlay:fullscreen, #ylp-overlay:-webkit-full-screen { width: 100vw; height: 100vh; background: #000; }
+
+/* mini player: compact controls */
+#ylp-overlay.ylp-mini .ylp-speed, #ylp-overlay.ylp-mini .ylp-cbtn[title^="Captions"], #ylp-overlay.ylp-mini .ylp-cbtn[title^="Fullscreen"] { display: none; }
+#ylp-overlay.ylp-mini .ylp-controls { padding: 16px 8px 2px; }
+#ylp-overlay.ylp-mini .ylp-row { height: 32px; }
+
+/* SponsorBlock submit panel (under the toolbar) */
+.ylp-submit {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-end;
+  margin: 8px 0 4px; padding: 10px 12px; border-radius: 12px;
+  font: 12px -apple-system, "Roboto", sans-serif;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+.ylp-submit strong { margin-right: auto; }
+.ylp-submit label { display: inline-flex; gap: 4px; align-items: center; }
+.ylp-submit input, .ylp-submit select, .ylp-submit button {
+  height: 28px; border: 0; border-radius: 14px; padding: 0 10px; font: inherit; color: inherit;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+.ylp-submit input { width: 70px; font-variant-numeric: tabular-nums; }
+.ylp-submit button { cursor: pointer; font-weight: 500; }
+.ylp-submit button:hover { background: color-mix(in srgb, currentColor 18%, transparent); }
+.ylp-submit [disabled] { opacity: .4; }
+.ylp-submit-msg:empty { display: none; }
+.ylp-submit-note { flex-basis: 100%; text-align: right; opacity: .65; font-size: 11px; }
+#ylp-overlay .ylp-toast button[title^="This segment"] { padding: 4px 8px; }

@@ -1,0 +1,41 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>
+  body { font: 13px -apple-system, sans-serif; padding: 12px; width: 250px; margin: 0; }
+  label { display: flex; gap: 8px; align-items: center; margin-bottom: 7px; }
+  select { flex: 1; }
+  h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #888; margin: 12px 0 6px; }
+  #sbCats { padding-left: 22px; }
+  #sbCats label { margin-bottom: 4px; }
+  .note { color: #888; font-size: 11px; margin-top: 4px; }
+  #helper { color: #666; font-size: 12px; margin-bottom: 6px; }
+</style>
+<h3>Player</h3>
+<label><input type="checkbox" id="enabled"> Replace YouTube player</label>
+<label>Source
+  <select id="source">
+    <option value="browser">Stream in browser</option>
+    <option value="helper">Local yt-dlp helper</option>
+  </select>
+</label>
+<div id="helper" hidden></div>
+
+<h3>Page</h3>
+<label><input type="checkbox" id="hideAds"> Hide ads</label>
+<label><input type="checkbox" id="hideShorts"> Hide Shorts</label>
+<label><input type="checkbox" id="saveEnabled"> Show Save (download) button</label>
+
+<h3>SponsorBlock</h3>
+<label><input type="checkbox" id="sponsorBlock"> Use SponsorBlock</label>
+<div id="sbOpts">
+  <label>When a segment starts
+    <select id="sbMode">
+      <option value="auto">Skip automatically</option>
+      <option value="ask">Show a Skip button</option>
+    </select>
+  </label>
+  <label><input type="checkbox" id="sbExtras"> Highlight button &amp; video labels</label>
+  <div id="sbCats"></div>
+</div>
+<div class="note">Segments from SponsorBlock (sponsor.ajay.app), CC BY-NC-SA 4.0.</div>
+<script src="popup.js"></script>
