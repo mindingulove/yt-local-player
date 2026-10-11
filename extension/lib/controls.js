@@ -77,6 +77,7 @@
     speedBtn.textContent = "1×";
     const ccBtn = button("cc", "Captions (c)", () => opts.onCaptions?.());
     const pipBtn = button("pip", "Picture in picture", togglePip);
+    pipBtn.hidden = !(document.pictureInPictureEnabled || video.webkitSetPresentationMode);
     const fullBtn = button("full", "Fullscreen (f)", toggleFullscreen);
     const row = el("div", "ylp-row", playBtn, time, el("div", "ylp-spacer"), speedBtn, ccBtn, pipBtn, fullBtn);
     const bar = el("div", "ylp-controls", seek, row);

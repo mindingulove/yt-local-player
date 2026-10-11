@@ -6,3 +6,4 @@ xcuserdata/
 .env
 .env.*
 Local.xcconfig
+dist/

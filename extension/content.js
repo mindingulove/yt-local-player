@@ -133,6 +133,7 @@
     saveAbort = null;
     if (overlay) {
       overlay.controls.destroy();
+      overlay.hls?.destroy();
       if (currentId && !overlay.video.hidden) savePosition(currentId, overlay.video.currentTime, overlay.video.duration);
       overlay.video.pause();
       overlay.video.removeAttribute("src");
@@ -316,6 +317,8 @@
     const paused = initial ? false : video.paused;
     dash?.destroy();
     dash = null;
+    overlay.hls?.destroy();
+    overlay.hls = null;
     if (q === "auto") {
       video.addEventListener(
         "error",
@@ -328,7 +331,21 @@
         },
         { once: true }
       );
-      video.src = info.hls;
+      if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = info.hls; // Safari: native HLS
+      } else if (globalThis.Hls?.isSupported()) {
+        // Chrome/Firefox: hls.js over MediaSource (workers off: blob workers can
+        // be blocked by the page's CSP).
+        const hls = new Hls({ enableWorker: false, capLevelToPlayerSize: true });
+        overlay.hls = hls;
+        hls.on(Hls.Events.ERROR, (_e, data) => {
+          if (data.fatal && token === playToken && overlay) video.dispatchEvent(new Event("error"));
+        });
+        hls.loadSource(info.hls);
+        hls.attachMedia(video);
+      } else {
+        video.dispatchEvent(new Event("error")); // falls back to a fixed quality
+      }
     } else {
       const vf = YLP.playableVideoFormats(info).find((f) => f.height === q);
       const af = YLP.playableAudioFormat(info);
