@@ -23,6 +23,7 @@
 		6EAD5BAB307A9E960065AEFF /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = 6EAD5BA4307A9E960065AEFF /* popup.html */; };
 		6EAD5BAC307A9E960065AEFF /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 6EAD5BA5307A9E960065AEFF /* manifest.json */; };
 		6EAD5BAD307A9E960065AEFF /* lib in Resources */ = {isa = PBXBuildFile; fileRef = 6EAD5BA6307A9E960065AEFF /* lib */; };
+		6EAD5BF1307A9E960065AEFF /* icons in Resources */ = {isa = PBXBuildFile; fileRef = 6EAD5BF0307A9E960065AEFF /* icons */; };
 		6EAD5BAE307A9E960065AEFF /* content.js in Resources */ = {isa = PBXBuildFile; fileRef = 6EAD5BA7307A9E960065AEFF /* content.js */; };
 /* End PBXBuildFile section */
 
@@ -68,6 +69,7 @@
 		6EAD5BA4307A9E960065AEFF /* popup.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = popup.html; path = ../../extension/popup.html; sourceTree = "<group>"; };
 		6EAD5BA5307A9E960065AEFF /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../../extension/manifest.json; sourceTree = "<group>"; };
 		6EAD5BA6307A9E960065AEFF /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = ../../extension/lib; sourceTree = "<group>"; };
+		6EAD5BF0307A9E960065AEFF /* icons */ = {isa = PBXFileReference; lastKnownFileType = folder; name = icons; path = ../../extension/icons; sourceTree = "<group>"; };
 		6EAD5BA7307A9E960065AEFF /* content.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = content.js; path = ../../extension/content.js; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -146,6 +148,7 @@
 				6EAD5BA4307A9E960065AEFF /* popup.html */,
 				6EAD5BA5307A9E960065AEFF /* manifest.json */,
 				6EAD5BA6307A9E960065AEFF /* lib */,
+				6EAD5BF0307A9E960065AEFF /* icons */,
 				6EAD5BA7307A9E960065AEFF /* content.js */,
 			);
 			name = Resources;
@@ -243,6 +246,7 @@
 			isa = PBXResourcesBuildPhase;
 			files = (
 				6EAD5BAD307A9E960065AEFF /* lib in Resources */,
+				6EAD5BF1307A9E960065AEFF /* icons in Resources */,
 				6EAD5BA8307A9E960065AEFF /* popup.js in Resources */,
 				6EAD5BAB307A9E960065AEFF /* popup.html in Resources */,
 				6EAD5BAC307A9E960065AEFF /* manifest.json in Resources */,
