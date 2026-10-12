@@ -129,7 +129,8 @@
       ok: status.status === "OK",
       reason: status.reason || status.status || "unknown error",
       title: j.videoDetails?.title || videoId,
-      isLive: !!j.videoDetails?.isLive,
+      isLive: !!(j.videoDetails?.isLive || j.microformat?.playerMicroformatRenderer?.liveBroadcastDetails?.isLiveNow),
+      isUpcoming: !!j.videoDetails?.isUpcoming || status.status === "LIVE_STREAM_OFFLINE",
       durationSec: +(j.videoDetails?.lengthSeconds || 0),
       hls: sd.hlsManifestUrl || null,
       videoFormats: mp4Video,
@@ -148,6 +149,9 @@
       try {
         const info = parse(videoId, await requestPlayer(videoId, client, visitor));
         info.client = client.context.clientName;
+        // A live/upcoming broadcast belongs in YouTube's native player even
+        // when this client cannot supply playable streams for it.
+        if (info.isLive || info.isUpcoming) return info;
         if (info.ok && (info.hls || info.videoFormats.length)) return info;
         first ??= info;
       } catch (e) {

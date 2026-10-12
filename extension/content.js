@@ -385,15 +385,18 @@
   let playToken = 0; // invalidates stale async work when the source changes
 
   async function playInBrowser(id) {
+    const token = playToken;
     setStatus(h("div", {}, "Loading…"));
     try {
-      info = await (overlay.infoPromise || YLP.getPlayer(id));
+      const result = await (overlay.infoPromise || YLP.getPlayer(id));
+      if (token !== playToken || id !== currentId || !overlay) return;
+      info = result;
       mark("apiDone");
     } catch (e) {
-      if (id === currentId) showError("Couldn't reach YouTube's player API.", String(e.message || e), btnRetry(), btnHelper());
+      if (token === playToken && id === currentId && overlay) showError("Couldn't reach YouTube's player API.", String(e.message || e), btnRetry(), btnHelper());
       return;
     }
-    if (id !== currentId) return;
+    if (info.isLive || info.isUpcoming) return useYouTube();
     if (!info.ok) return showError("YouTube won't stream this video here.", info.reason, btnHelper());
     if (!info.hls && !YLP.playableVideoFormats(info).length) {
       return showError("No playable formats for this video.", null, btnHelper());
@@ -679,14 +682,25 @@
 
   async function setup(id) {
     currentId = id;
+    const token = playToken;
     for (const k in timing) delete timing[k];
     mark("setup");
-    // Ask for the streams right away instead of after YouTube's UI appears.
-    const infoPromise = settings.source === "helper" ? null : YLP.getPlayer(id);
+    // Check the broadcast before touching YouTube's player, including when
+    // using the helper (which would otherwise try to download a live stream).
+    const infoPromise = YLP.getPlayer(id);
     infoPromise?.catch(() => {}); // handled in playInBrowser
-    const player = await waitFor(ytPlayer);
+    const [player, playerInfo] = await Promise.all([
+      waitFor(() => token !== playToken || id !== currentId || ytPlayer()),
+      infoPromise.catch(() => null),
+    ]);
     mark("playerFound");
-    if (id !== currentId) return;
+    if (token !== playToken || id !== currentId) return;
+    // Keep currentId so navigation polling does not try to take over again.
+    // No overlay or suppression has started: native playback stays untouched.
+    if (playerInfo?.isLive || playerInfo?.isUpcoming) {
+      mark("nativeLive");
+      return;
+    }
     overlay = buildOverlay();
     overlay.infoPromise = infoPromise;
     const thumb = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
