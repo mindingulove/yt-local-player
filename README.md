@@ -9,9 +9,11 @@
 
 **[Download the latest release](https://github.com/mindingulove/yt-local-player/releases/latest)** for Chrome, Firefox or Safari.
 
-A Safari extension that swaps YouTube's watch-page player for a plain native `<video>`.
-It streams directly from YouTube's video servers, so there are no ads, and has a **Save**
-button that downloads the video as an mp4. Nothing needs to run outside Safari.
+A browser extension for Safari, Chrome and Firefox that swaps YouTube's watch-page player for
+its own player. It streams directly from YouTube's video servers, so there are no ads, and it
+adds custom controls with thumbnail previews on the seek bar, captions, a quality picker, a mini
+player, SponsorBlock, and ad and Shorts hiding. An optional **Save** button (off by default)
+downloads the video as an mp4. Nothing needs to run outside the browser.
 
 ```
 extension/
