@@ -5,6 +5,10 @@
 > you are responsible for how you use it. The optional Save button is **off by default**:
 > only download videos you have the right to download.
 
+![YT Local Player on a YouTube watch page: custom controls, the toolbar between Subscribe and Like/Share, and the settings popup](docs/screenshot.jpg)
+
+**[Download the latest release](https://github.com/mindingulove/yt-local-player/releases/latest)** for Chrome, Firefox or Safari.
+
 A Safari extension that swaps YouTube's watch-page player for a plain native `<video>`.
 It streams directly from YouTube's video servers, so there are no ads, and has a **Save**
 button that downloads the video as an mp4. Nothing needs to run outside Safari.
