@@ -1116,12 +1116,17 @@
 
   // Leave the watch page the way YouTube does: back to the previous page (a
   // real history step its router handles), or home via its own logo link.
+  // history.back() is only safe if this tab has navigated inside YouTube since
+  // the script loaded; otherwise the previous entry may be another site, which
+  // would unload the page (and the player) entirely.
+  const startHistoryLength = history.length;
+
   function enterMini() {
     if (!overlay || overlay.mini || overlay.video.hidden) return;
     setMini(true);
     const watchUrl = location.href;
     overlay.leaving = watchUrl;
-    if (history.length > 1) {
+    if (history.length > startHistoryLength) {
       history.back();
       overlay.cameFrom = watchUrl; // so expand can step forward again
     } else {
