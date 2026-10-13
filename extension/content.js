@@ -1134,6 +1134,7 @@
     setMini(true);
     const watchUrl = location.href;
     overlay.leaving = watchUrl;
+    overlay.cameFrom = null;
     if (prevHref) {
       history.back();
       overlay.cameFrom = watchUrl; // so expand can step forward again
@@ -1149,10 +1150,18 @@
     const id = currentId;
     const at = Math.floor(overlay.video.currentTime);
     overlay.leaving = null;
-    if (overlay.cameFrom) history.forward();
-    setTimeout(() => {
-      if (videoIdFromUrl() !== id) location.assign(`/watch?v=${id}&t=${at}s`);
-    }, overlay.cameFrom ? 700 : 0);
+    if (!overlay.cameFrom) return location.assign(`/watch?v=${id}&t=${at}s`);
+    history.forward();
+    // YouTube's in-page navigation can be slow (notably in the web app); a full
+    // page load here would also lose the history we need to collapse again.
+    const started = Date.now();
+    const wait = setInterval(() => {
+      if (videoIdFromUrl() === id) return clearInterval(wait);
+      if (Date.now() - started > 4000) {
+        clearInterval(wait);
+        location.assign(`/watch?v=${id}&t=${at}s`);
+      }
+    }, 100);
   }
 
   function closeMini() {
