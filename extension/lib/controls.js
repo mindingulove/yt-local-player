@@ -4,6 +4,9 @@
   const ICONS = {
     play: "M8 5v14l11-7z",
     pause: "M6 5h4v14H6zm8 0h4v14h-4z",
+    volHigh: "M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z",
+    volLow: "M18.5 12A4.5 4.5 0 0 0 16 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z",
+    volMute: "M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z",
     cc: "M19 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm-8 7H9.5v-.5h-2v3h2V13H11v1a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1zm7 0h-1.5v-.5h-2v3h2V13H18v1a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1z",
     pip: "M19 7h-8v6h8V7zm2-4H3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 16H3V5h18v14z",
     full: "M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z",
@@ -82,11 +85,27 @@
     const speedBtn = button(null, "Playback speed", cycleSpeed);
     speedBtn.classList.add("ylp-speed");
     speedBtn.textContent = "1×";
+    const volBtn = button("volHigh", "Mute (m)", () => (video.muted = !video.muted));
+    const volSlider = el("input", "ylp-volume");
+    volSlider.type = "range";
+    volSlider.min = "0";
+    volSlider.max = "1";
+    volSlider.step = "0.02";
+    volSlider.title = "Volume";
+    volSlider.addEventListener("input", () => {
+      video.volume = Number(volSlider.value);
+      video.muted = video.volume === 0;
+      try {
+        localStorage.setItem("ylp-volume", String(video.volume));
+      } catch {}
+    });
+    for (const ev of ["click", "pointerdown", "mousedown"]) volSlider.addEventListener(ev, (e) => e.stopPropagation());
+    const volume = el("div", "ylp-vol", volBtn, volSlider);
     const ccBtn = button("cc", "Captions (c)", () => opts.onCaptions?.());
     const pipBtn = button("pip", "Picture in picture", togglePip);
     pipBtn.hidden = !(document.pictureInPictureEnabled || video.webkitSetPresentationMode);
     const fullBtn = button("full", "Fullscreen (f)", toggleFullscreen);
-    const row = el("div", "ylp-row", playBtn, time, el("div", "ylp-spacer"), speedBtn, ccBtn, pipBtn, fullBtn);
+    const row = el("div", "ylp-row", playBtn, volume, time, el("div", "ylp-spacer"), speedBtn, ccBtn, pipBtn, fullBtn);
     const bar = el("div", "ylp-controls", seek, row);
     const spinner = el("div", "ylp-spinner");
     root.append(spinner, bar);
@@ -274,6 +293,16 @@
     video.addEventListener("progress", update);
     video.addEventListener("durationchange", () => (update(), renderMarkers()));
     video.addEventListener("ratechange", () => (speedBtn.textContent = `${video.playbackRate}×`));
+    function syncVolume() {
+      const off = video.muted || video.volume === 0;
+      setIcon(volBtn, off ? "volMute" : video.volume < 0.5 ? "volLow" : "volHigh");
+      volBtn.title = off ? "Unmute (m)" : "Mute (m)";
+      const v = off ? 0 : video.volume;
+      volSlider.value = String(v);
+      volSlider.style.setProperty("--v", `${v * 100}%`);
+    }
+    video.addEventListener("volumechange", syncVolume);
+    syncVolume();
     video.addEventListener("waiting", () => root.classList.add("ylp-buffering"));
     for (const ev of ["playing", "canplay", "seeked", "pause"]) video.addEventListener(ev, () => root.classList.remove("ylp-buffering"));
     syncPlayState();

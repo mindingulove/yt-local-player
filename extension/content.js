@@ -169,13 +169,11 @@
     video.addEventListener("playing", () => {
       if (overlay?.video === video) showVideo();
     });
-    // Volume is pinned at max (use the Mac's volume instead): undo any change.
-    const fullVolume = () => {
-      if (video.volume !== 1) video.volume = 1;
-      if (video.muted && !overlay?.sbMuting) video.muted = false;
-    };
-    fullVolume();
-    video.addEventListener("volumechange", fullVolume);
+    // Restore the last volume the user chose (the controls save it).
+    try {
+      const saved = parseFloat(localStorage.getItem("ylp-volume"));
+      if (saved >= 0 && saved <= 1) video.volume = saved;
+    } catch {}
     const status = h("div", { class: "ylp-status" });
     const toolbar = h("div", { class: "ylp-toolbar", hidden: true });
     // Scrollable bar: vertical wheel scrolls it sideways; fade the clipped edges.
@@ -1169,6 +1167,9 @@
       ArrowLeft: () => (video.currentTime -= 5),
       ArrowRight: () => (video.currentTime += 5),
       c: toggleCaptions,
+      m: () => (video.muted = !video.muted),
+      ArrowUp: () => (video.volume = Math.min(1, video.volume + 0.05)),
+      ArrowDown: () => (video.volume = Math.max(0, video.volume - 0.05)),
       f: () => overlay.controls.toggleFullscreen(),
     };
     const fn = actions[e.key];

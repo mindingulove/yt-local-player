@@ -199,6 +199,15 @@ html.ylp-mini-active .ylp-toolbar.ylp-docked { display: none !important; }
 }
 #ylp-overlay .ylp-cbtn.ylp-speed { width: auto; padding: 0 8px; border-radius: 16px; }
 #ylp-overlay .ylp-time { font-size: 13px; margin-left: 6px; font-variant-numeric: tabular-nums; }
+#ylp-overlay .ylp-vol { display: flex; align-items: center; }
+#ylp-overlay .ylp-volume {
+  -webkit-appearance: none; appearance: none; width: 0; height: 4px; margin: 0; padding: 0; border-radius: 2px; opacity: 0;
+  background: linear-gradient(to right, #fff var(--v, 100%), rgba(255,255,255,.3) var(--v, 100%));
+  transition: width .15s, opacity .15s, margin .15s;
+}
+#ylp-overlay .ylp-vol:hover .ylp-volume, #ylp-overlay .ylp-volume:focus-visible { width: 64px; margin: 0 8px 0 2px; opacity: 1; }
+#ylp-overlay .ylp-volume::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 0; }
+#ylp-overlay .ylp-volume::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 0; }
 #ylp-overlay .ylp-spacer { flex: 1; }
 
 /* buffering spinner */
