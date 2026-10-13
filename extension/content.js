@@ -1143,23 +1143,44 @@
     }
   }
 
-  // Return to the watch page: history.forward() if it's still the next entry,
-  // otherwise reopen it at the current time (a page load).
+  // Open a watch page through YouTube's own router: no page load, so the
+  // player (and whatever page is behind it) survives. Returns false if the
+  // router isn't there to take the event.
+  function spaNavigate(id, at) {
+    const app = document.querySelector("ytd-app");
+    if (!app) return false;
+    const url = `/watch?v=${id}&t=${at}s`;
+    app.dispatchEvent(
+      new CustomEvent("yt-navigate", {
+        bubbles: true,
+        composed: true,
+        detail: {
+          endpoint: {
+            commandMetadata: { webCommandMetadata: { url, webPageType: "WEB_PAGE_TYPE_WATCH", rootVe: 3832 } },
+            watchEndpoint: { videoId: id, startTimeSeconds: at },
+          },
+        },
+      })
+    );
+    return true;
+  }
+
+  // Return to the watch page without interrupting playback. Going "forward" is
+  // not reliable (browsing while minimized discards the forward entry), so ask
+  // YouTube's router; only if that does nothing fall back to a full page load.
   function expandMini() {
     if (!overlay?.mini) return;
     const id = currentId;
     const at = Math.floor(overlay.video.currentTime);
     overlay.leaving = null;
-    if (!overlay.cameFrom) return location.assign(`/watch?v=${id}&t=${at}s`);
-    history.forward();
-    // YouTube's in-page navigation can be slow (notably in the web app); a full
-    // page load here would also lose the history we need to collapse again.
+    const reload = () => location.assign(`/watch?v=${id}&t=${at}s`);
+    if (!spaNavigate(id, at)) return reload();
     const started = Date.now();
     const wait = setInterval(() => {
       if (videoIdFromUrl() === id) return clearInterval(wait);
       if (Date.now() - started > 4000) {
         clearInterval(wait);
-        location.assign(`/watch?v=${id}&t=${at}s`);
+        reload();
       }
     }, 100);
   }
