@@ -315,9 +315,11 @@
       },
       setStoryboard(sb) {
         storyboard = sb;
-        // Warm the cache so the first hover isn't blank.
+        // Warm the cache so the first hover isn't blank. Only the first few
+        // sheets: a long video has dozens, and decoding them all holds enough
+        // memory for Safari to kill the page. The rest load on hover.
         if (sb) {
-          const sheets = Math.ceil(sb.count / (sb.cols * sb.rows));
+          const sheets = Math.min(3, Math.ceil(sb.count / (sb.cols * sb.rows)));
           for (let i = 0; i < sheets; i++) new Image().src = sb.url(i);
         }
       },
