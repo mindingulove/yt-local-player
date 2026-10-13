@@ -1080,6 +1080,7 @@
 
   function onNavigate() {
     if (docEl.dataset.ylpInstance !== INSTANCE) return;
+    trackNavigation();
     if (redirectShorts()) return;
     const id = settings.enabled ? videoIdFromUrl() : null;
     if (overlay?.mini) {
@@ -1116,17 +1117,24 @@
 
   // Leave the watch page the way YouTube does: back to the previous page (a
   // real history step its router handles), or home via its own logo link.
-  // history.back() is only safe if this tab has navigated inside YouTube since
-  // the script loaded; otherwise the previous entry may be another site, which
-  // would unload the page (and the player) entirely.
-  const startHistoryLength = history.length;
+  // history.back() is only safe if this tab got to the video by navigating
+  // inside YouTube; otherwise the previous entry may be another site, which
+  // would unload the page (and the player). history.length can't tell us (it
+  // is capped, and differs in Safari web apps), so track in-page navigations.
+  let lastHref = null;
+  let prevHref = null;
+  function trackNavigation() {
+    if (location.href === lastHref) return;
+    prevHref = lastHref;
+    lastHref = location.href;
+  }
 
   function enterMini() {
     if (!overlay || overlay.mini || overlay.video.hidden) return;
     setMini(true);
     const watchUrl = location.href;
     overlay.leaving = watchUrl;
-    if (history.length > startHistoryLength) {
+    if (prevHref) {
       history.back();
       overlay.cameFrom = watchUrl; // so expand can step forward again
     } else {
