@@ -25,8 +25,8 @@ def build(target):
 
     manifest = json.loads((SRC / "manifest.json").read_text())
     cs = manifest["content_scripts"][0]
-    # hls.js plays Auto quality (no native HLS); the shim must load first.
-    cs["js"] = ["lib/browser-shim.js", "lib/hls.min.js", *cs["js"]]
+    # hls.js is declared by the shared manifest; the API shim must load first.
+    cs["js"] = ["lib/browser-shim.js", *cs["js"]]
     if target == "chrome":
         manifest["background"] = {"service_worker": "background.js"}
         manifest["minimum_chrome_version"] = "116"

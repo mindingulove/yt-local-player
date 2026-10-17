@@ -8,3 +8,4 @@ xcuserdata/
 Local.xcconfig
 dist/
 node_modules/
+extension/lib/hls.min.js

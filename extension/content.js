@@ -451,6 +451,8 @@
     const video = overlay.video;
     const at = initial ? startTimeFromUrl() : video.currentTime;
     const paused = initial ? false : video.paused;
+    const audioTrack = YLP.selectedAudioTrack(info, overlay.audioTrackId);
+    const selectHlsAudio = (info.audioTracks?.length || 0) > 1;
     dash?.destroy();
     dash = null;
     overlay.hls?.destroy();
@@ -467,12 +469,16 @@
         },
         { once: true }
       );
-      if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      if (video.canPlayType("application/vnd.apple.mpegurl") && !selectHlsAudio) {
         video.src = info.hls; // Safari: native HLS
       } else if (globalThis.Hls?.isSupported()) {
-        // Chrome/Firefox: hls.js over MediaSource (workers off: blob workers can
-        // be blocked by the page's CSP).
-        const hls = new Hls({ enableWorker: false, capLevelToPlayerSize: true });
+        // hls.js handles Chrome/Firefox and language-filtered Safari streams.
+        // Workers stay off because the page's CSP can block blob workers.
+        const hls = new Hls({
+          enableWorker: false,
+          capLevelToPlayerSize: true,
+          ...(selectHlsAudio ? { pLoader: YLP.audioPlaylistLoader(Hls, audioTrack) } : {}),
+        });
         overlay.hls = hls;
         hls.on(Hls.Events.ERROR, (_e, data) => {
           if (data.fatal && token === playToken && overlay) video.dispatchEvent(new Event("error"));
@@ -484,7 +490,7 @@
       }
     } else {
       const vf = YLP.playableVideoFormats(info).find((f) => f.height === q);
-      const af = YLP.playableAudioFormat(info);
+      const af = YLP.playableAudioFormat(info, overlay.audioTrackId);
       const fail = (e) => {
         if (token !== playToken || !overlay) return;
         if (info.hls && !overlay.triedHls) {
@@ -511,6 +517,23 @@
   // ---- toolbar: quality, captions, save ------------------------------------
 
   function buildToolbar() {
+    const tracks = info.audioTracks || [];
+    if (!tracks.some((t) => t.id === overlay.audioTrackId)) overlay.audioTrackId = null;
+    const defaultAudio = YLP.selectedAudioTrack(info);
+    const audio = selectPill(
+      "volHigh",
+      "Audio language",
+      [
+        { value: "default", label: defaultAudio ? `Default (${defaultAudio.name})` : "Default", short: defaultAudio ? `${defaultAudio.lang} · Default` : "Default" },
+        ...tracks.map((t) => ({ value: t.id, label: t.name, short: t.lang })),
+      ],
+      overlay.audioTrackId || "default",
+      (id) => {
+        overlay.audioTrackId = id === "default" ? null : id;
+        applyQuality(selectedQuality());
+      }
+    );
+    audio.select.disabled = !tracks.length;
     const quality = selectPill(
       "tune",
       "Quality",
@@ -548,7 +571,7 @@
     const mini = pill("mini", "Mini player (i)", { iconOnly: true, onclick: () => enterMini() });
     const addSegment = pill("add", "Submit a SponsorBlock segment", { iconOnly: true, onclick: openSubmitPanel, hidden: !settings.sponsorBlock });
     overlay.sbSlot = h("span", { class: "ylp-sb" });
-    overlay.toolbar.replaceChildren(overlay.sbSlot, quality.wrap, cc.wrap, mini, addSegment, overlay.saveBtn, overlay.saveLabel);
+    overlay.toolbar.replaceChildren(overlay.sbSlot, quality.wrap, audio.wrap, cc.wrap, mini, addSegment, overlay.saveBtn, overlay.saveLabel);
     renderSponsorUi();
     overlay.toolbar.hidden = false;
     placeToolbar();
@@ -625,7 +648,7 @@
   function saveFormats() {
     const q = selectedQuality();
     const video = (q !== "auto" && info.videoFormats.find((f) => f.height === q)) || info.videoFormats[0];
-    return { video, audio: info.audioFormats[0] };
+    return { video, audio: YLP.audioFormatsForTrack(info, overlay.audioTrackId)[0] };
   }
 
   function renderSaveButton() {

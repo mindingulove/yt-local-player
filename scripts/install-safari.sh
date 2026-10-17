@@ -3,6 +3,7 @@
 # launch it once so Safari registers the extension.
 set -eo pipefail   # a failed build must not get installed
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cp "$ROOT/vendor/hls.min.js" "$ROOT/extension/lib/hls.min.js"
 cd "$ROOT/YT Local Player"
 [ -f "$ROOT/Local.xcconfig" ] || { echo "Create Local.xcconfig first (see Local.xcconfig.example)"; exit 1; }
 xcodebuild -scheme "YT Local Player" -configuration Release -derivedDataPath build \

@@ -174,10 +174,13 @@
     const mp4Video = adaptive
       .filter((f) => f.mimeType.startsWith("video/mp4") && /avc1/.test(f.mimeType) && f.indexRange)
       .sort((a, b) => b.height - a.height || b.bitrate - a.bitrate);
-    // Videos with dubs list one audio stream per language; keep the original.
+    // Keep every language, including metadata-only tracks used by HLS.
+    const audioTracks = [...new Map((sd.adaptiveFormats || []).filter((f) => f.audioTrack).map((f) => {
+      const t = f.audioTrack;
+      return [t.id, { id: t.id, lang: t.id.split(".")[0], name: t.displayName || t.id, isDefault: !!t.audioIsDefault, dubbed: !!t.isAutoDubbed }];
+    })).values()];
     const mp4Audio = adaptive
       .filter((f) => f.mimeType.startsWith("audio/mp4") && f.indexRange)
-      .filter((f) => !f.audioTrack || f.audioTrack.audioIsDefault)
       .sort((a, b) => b.bitrate - a.bitrate);
     const captions = (j.captions?.playerCaptionsTracklistRenderer?.captionTracks || []).map((t) => ({
       lang: t.languageCode,
@@ -196,6 +199,7 @@
       hls: sd.hlsManifestUrl || null,
       videoFormats: mp4Video,
       audioFormats: mp4Audio,
+      audioTracks,
       captions,
       storyboard: parseStoryboard(j.storyboards?.playerStoryboardSpecRenderer?.spec, +(j.videoDetails?.lengthSeconds || 0)),
     };

@@ -145,7 +145,7 @@
     return info.videoFormats.filter((f) => supported(f) && !seen.has(f.height) && seen.add(f.height));
   }
 
-  const playableAudioFormat = (info) => info.audioFormats.find(supported);
+  const playableAudioFormat = (info, trackId) => YLP.audioFormatsForTrack(info, trackId).find(supported);
 
   globalThis.YLP = Object.assign(globalThis.YLP || {}, { DashPlayer, playableVideoFormats, playableAudioFormat });
 })();
