@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YT Local Player",
-  "version": "2.0",
+  "version": "2.0.1",
   "description": "Ad-free native YouTube player that streams straight from YouTube, with Save, captions, SponsorBlock skipping, and ad/Shorts hiding.",
   "permissions": [
     "storage"
@@ -24,6 +24,7 @@
         "*://m.youtube.com/*"
       ],
       "js": [
+        "lib/decipher.js",
         "lib/innertube.js",
         "lib/mp4.js",
         "lib/dash-player.js",

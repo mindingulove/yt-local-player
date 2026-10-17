@@ -1,0 +1,13 @@
+{
+  "name": "yt-local-player",
+  "private": true,
+  "scripts": {
+    "build:decipher": "node scripts/build-decipher.mjs",
+    "test": "node --test tests/*.test.cjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "sval": "0.6.12",
+    "youtubei.js": "18.1.0"
+  }
+}

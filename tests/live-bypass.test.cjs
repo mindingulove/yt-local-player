@@ -26,7 +26,7 @@ test('player API identifies active/upcoming broadcasts and allows archives', asy
     const info = await context.YLP.getPlayer('test');
     const archived = !!response.videoDetails?.isLiveContent;
     assert.equal(info.isLive || info.isUpcoming, !archived);
-    assert.equal(requests, archived ? 2 : 1);
+    assert.equal(requests, archived ? 3 : 1);
   }
 });
 

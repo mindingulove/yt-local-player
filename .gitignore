@@ -7,3 +7,4 @@ xcuserdata/
 .env.*
 Local.xcconfig
 dist/
+node_modules/

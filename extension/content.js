@@ -213,6 +213,9 @@
   }
 
   const btnYouTube = () => button("Use YouTube player", useYouTube);
+  const btnSignIn = () => button("Sign in to YouTube", () => {
+    location.href = `https://www.youtube.com/signin?next=${encodeURIComponent(location.href)}`;
+  });
   const btnRetry = () =>
     button("Retry", () => {
       const id = currentId;
@@ -382,6 +385,23 @@
   let info = null; // YLP.getPlayer() result for the current video
   let playToken = 0; // invalidates stale async work when the source changes
 
+  function tryNextClient() {
+    if (!overlay || !info?.client) return false;
+    const failed = overlay.failedClients ||= [];
+    if (failed.includes(info.client)) return false;
+    failed.push(info.client);
+    dash?.destroy();
+    dash = null;
+    overlay.hls?.destroy();
+    overlay.hls = null;
+    // Invalidate pending media errors before the next request starts.
+    playToken++;
+    overlay.triedHls = false;
+    overlay.infoPromise = YLP.getPlayer(currentId, { skipClients: failed });
+    playInBrowser(currentId);
+    return true;
+  }
+
   async function playInBrowser(id) {
     const token = playToken;
     setStatus(h("div", {}, "Loading…"));
@@ -395,7 +415,12 @@
       return;
     }
     if (info.isLive || info.isUpcoming) return useYouTube();
-    if (!info.ok) return showError("YouTube won't stream this video here.", info.reason, btnHelper());
+    if (!info.ok) return showError(
+      "YouTube won't stream this video here.",
+      info.reason,
+      ...(info.loginRequired ? [btnSignIn(), btnRetry()] : []),
+      btnHelper()
+    );
     if (!info.hls && !YLP.playableVideoFormats(info).length) {
       return showError("No playable formats for this video.", null, btnHelper());
     }
@@ -418,7 +443,7 @@
     if (q === "auto" && choices[0] === "auto") return "auto";
     const heights = choices.filter((c) => c !== "auto");
     const want = q === "auto" ? 1080 : +q;
-    return heights.find((h) => h <= want) ?? heights[heights.length - 1];
+    return heights.find((h) => h <= want) ?? heights[heights.length - 1] ?? (info.hls ? "auto" : undefined);
   }
 
   async function applyQuality(q, initial = false) {
@@ -438,7 +463,7 @@
           if (token !== playToken || !overlay) return;
           const fixed = qualityChoices().find((c) => c !== "auto");
           if (fixed) applyQuality(fixed, initial);
-          else showError("Safari couldn't play this video.", overlay.video.error?.message, btnRetry(), btnHelper());
+          else if (!tryNextClient()) showError("Safari couldn't play this video.", overlay.video.error?.message, btnRetry(), btnHelper());
         },
         { once: true }
       );
@@ -467,7 +492,7 @@
           overlay.triedHls = true;
           return applyQuality("auto", initial);
         }
-        showError("Playback failed.", String(e.message || e), btnRetry(), btnHelper());
+        if (!tryNextClient()) showError("Playback failed.", String(e.message || e), btnRetry(), btnHelper());
       };
       dash = new YLP.DashPlayer(video, vf, af, info.durationSec, fail);
       try {

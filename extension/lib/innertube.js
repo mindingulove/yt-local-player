@@ -1,10 +1,7 @@
 // Minimal InnerTube client: asks YouTube's player API for a video's streams.
 //
-// Posing as the visionOS app (with the page's own visitor ID) gives an HLS
-// manifest plus plain, full-length stream URLs — nothing to decipher and no
-// PO token. The iOS client is a fallback; without a PO token it only serves
-// ~60s of its plain URLs, but its HLS is fine. If YouTube starts rejecting a
-// client, refresh its values from YouTube.js's src/utils/Constants.ts.
+// Prefer the web session (including the user's YouTube login cookies).
+// App clients remain fallbacks for sessions without usable web streams.
 (() => {
   const CLIENTS = [
     {
@@ -23,21 +20,78 @@
       id: "5",
       context: {
         clientName: "IOS",
-        clientVersion: "20.11.6",
+        clientVersion: "21.26.4",
         deviceMake: "Apple",
-        deviceModel: "iPhone10,4",
-        osName: "iOS",
-        osVersion: "16.7.7.20H330",
+        deviceModel: "iPhone16,2",
+        osName: "iPhone",
+        osVersion: "18.3.2.22D82",
+        userAgent: "com.google.ios.youtube/21.26.4 (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X;)",
       },
     },
   ];
 
-  let visitorData = null;
+  // Parse JSON data only; never execute scripts taken from the page.
+  function jsonAfter(text, pattern) {
+    const match = pattern.exec(text);
+    if (!match) return null;
+    const start = match.index + match[0].length;
+    let depth = 0, quoted = false, escaped = false;
+    for (let i = start; i < text.length; i++) {
+      const c = text[i];
+      if (quoted) {
+        if (escaped) escaped = false;
+        else if (c === "\\") escaped = true;
+        else if (c === '"') quoted = false;
+      } else if (c === '"') quoted = true;
+      else if (c === "{") depth++;
+      else if (c === "}" && --depth === 0) {
+        try { return JSON.parse(text.slice(start, i + 1)); } catch { return null; }
+      }
+    }
+    return null;
+  }
 
-  // The anonymous visitor ID youtube.com embeds in every page (ytcfg).
-  // Without it YouTube answers "Sign in to confirm you're not a bot".
+  function pageData() {
+    const config = {};
+    let player = null;
+    for (const script of document.scripts) {
+      const text = script.textContent;
+      Object.assign(config, jsonAfter(text, /ytcfg\.set\(\s*(?=\{)/));
+      player ||= jsonAfter(text, /(?:var\s+)?ytInitialPlayerResponse\s*=\s*(?=\{)/);
+    }
+    return { config, player };
+  }
+
+  // Generate YouTube's normal cookie authentication header in memory. Cookies
+  // and hashes never leave youtube.com and are never saved or sent to a helper.
+  async function authHeaders(config, origin) {
+    const cookies = Object.fromEntries((document.cookie || "").split(/;\s*/).map((entry) => {
+      const i = entry.indexOf("=");
+      return i < 0 ? [entry, ""] : [entry.slice(0, i), entry.slice(i + 1)];
+    }));
+    const timestamp = Math.floor(Date.now() / 1000);
+    const schemes = [
+      ["SAPISIDHASH", cookies.SAPISID || cookies["__Secure-3PAPISID"]],
+      ["SAPISID1PHASH", cookies["__Secure-1PAPISID"]],
+      ["SAPISID3PHASH", cookies["__Secure-3PAPISID"]],
+    ];
+    const auth = await Promise.all(schemes.filter(([, sid]) => sid).map(async ([scheme, sid]) => {
+      const digest = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(`${timestamp} ${sid} ${origin}`));
+      const hash = Array.from(new Uint8Array(digest), (n) => n.toString(16).padStart(2, "0")).join("");
+      return `${scheme} ${timestamp}_${hash}`;
+    }));
+    return {
+      "X-Goog-AuthUser": String(config.SESSION_INDEX ?? 0),
+      ...(config.DELEGATED_SESSION_ID ? { "X-Goog-PageId": config.DELEGATED_SESSION_ID } : {}),
+      ...(auth.length ? { Authorization: auth.join(" "), "X-Origin": origin } : {}),
+      ...(config.LOGGED_IN ? { "X-Youtube-Bootstrap-Logged-In": "true" } : {}),
+    };
+  }
+
+  // Keep the visitor ID aligned with the current browser session. A visitor
+  // ID alone is not authentication and does not prevent bot challenges.
   async function getVisitorData() {
-    if (visitorData) return visitorData;
+    let visitorData;
     const find = (text) => text.match(/"VISITOR_DATA":"([^"]+)"/)?.[1] || text.match(/"visitorData":"([^"]+)"/)?.[1];
     // At document_start ytcfg may not be parsed yet: poll the page for ~3s.
     for (let i = 0; i < 30; i++) {
@@ -52,33 +106,37 @@
       await new Promise((r) => setTimeout(r, 100));
     }
     YLP.mark?.("visitorFetchStart");
-    const html = await (await fetch("https://www.youtube.com/", { credentials: "omit" })).text();
+    const html = await (await fetch("https://www.youtube.com/", { credentials: "include" })).text();
     visitorData = find(html) || null;
     return visitorData;
   }
 
-  async function requestPlayer(videoId, client, visitor) {
+  async function requestPlayer(videoId, client, visitor, config = {}) {
     const lang = (navigator.language || "en-US").split("-");
-    const res = await fetch("https://www.youtube.com/youtubei/v1/player?prettyPrint=false", {
+    const origin = globalThis.location?.origin === "https://m.youtube.com" ? "https://m.youtube.com" : "https://www.youtube.com";
+    const res = await fetch(`${origin}/youtubei/v1/player?prettyPrint=false`, {
       method: "POST",
-      credentials: "omit", // logged-out request; web cookies confuse app clients
+      redirect: "error",
+      credentials: client.web ? "include" : "omit",
       headers: {
         "Content-Type": "application/json",
         "X-Youtube-Client-Name": client.id,
         "X-Youtube-Client-Version": client.context.clientVersion,
         ...(visitor ? { "X-Goog-Visitor-Id": visitor } : {}),
+        ...(client.web ? await authHeaders(config, origin) : {}),
       },
       body: JSON.stringify({
         videoId,
         contentCheckOk: true,
         racyCheckOk: true,
         context: {
+          ...(client.web ? config.INNERTUBE_CONTEXT : {}),
           client: {
-            ...client.context,
             userAgent: navigator.userAgent,
+            ...client.context,
             visitorData: visitor || undefined,
-            hl: lang[0],
-            gl: lang[1] || "US",
+            hl: client.context.hl || lang[0],
+            gl: client.context.gl || "US",
           },
         },
       }),
@@ -110,6 +168,8 @@
   function parse(videoId, j) {
     const status = j.playabilityStatus || {};
     const sd = j.streamingData || {};
+    // Web responses may contain encrypted signatures or SABR-only streams.
+    // Those are not usable URLs for this player; continue to another client.
     const adaptive = (sd.adaptiveFormats || []).filter((f) => f.url);
     const mp4Video = adaptive
       .filter((f) => f.mimeType.startsWith("video/mp4") && /avc1/.test(f.mimeType) && f.indexRange)
@@ -128,6 +188,7 @@
     return {
       ok: status.status === "OK",
       reason: status.reason || status.status || "unknown error",
+      loginRequired: status.status === "LOGIN_REQUIRED",
       title: j.videoDetails?.title || videoId,
       isLive: !!(j.videoDetails?.isLive || j.microformat?.playerMicroformatRenderer?.liveBroadcastDetails?.isLiveNow),
       isUpcoming: !!j.videoDetails?.isUpcoming || status.status === "LIVE_STREAM_OFFLINE",
@@ -142,24 +203,54 @@
 
   // Tries each client in order; returns the first playable result (or the
   // first failure, which carries YouTube's reason).
-  async function getPlayer(videoId) {
+  async function getPlayer(videoId, { skipClients = [] } = {}) {
     const visitor = await getVisitorData().catch(() => null);
-    let first = null;
-    for (const client of CLIENTS) {
+    // Read again on every navigation: account, visitor and video can change
+    // without reloading the document on YouTube.
+    const { config, player } = pageData();
+    const playable = (info) => info.ok && (info.hls || (info.videoFormats.length && info.audioFormats.length));
+    if (!skipClients.includes("WEB_PAGE") && player?.videoDetails?.videoId === videoId) {
+      // A web HLS manifest can load even while every media segment is denied
+      // unless its n signature has been transformed first.
       try {
-        const info = parse(videoId, await requestPlayer(videoId, client, visitor));
+        const broadcast = parse(videoId, player);
+        if (broadcast.isLive || broadcast.isUpcoming) return { ...broadcast, client: "WEB_PAGE" };
+        const info = parse(videoId, await (YLP.decipherStreams?.(player) || player));
+        if (info.isLive || info.isUpcoming || playable(info)) return { ...info, client: "WEB_PAGE" };
+      } catch (e) {
+        console.warn("[YT Local Player] Page stream signature decoding failed:", e.message);
+      }
+    }
+    const web = {
+      web: true,
+      id: config.INNERTUBE_CONTEXT?.client?.clientName === "MWEB" ? "2" : "1",
+      context: {
+        clientName: "WEB", clientVersion: config.INNERTUBE_CLIENT_VERSION || "2.20260708.00.00",
+        ...config.INNERTUBE_CONTEXT?.client,
+      },
+    };
+    let first = null;
+    for (const client of [web, ...CLIENTS]) {
+      if (skipClients.includes(client.context.clientName)) continue;
+      try {
+        const response = await requestPlayer(videoId, client, visitor, config);
+        const broadcast = parse(videoId, response);
+        if (broadcast.isLive || broadcast.isUpcoming) return { ...broadcast, client: client.context.clientName };
+        const info = parse(videoId, await (YLP.decipherStreams?.(response) || response));
         info.client = client.context.clientName;
         // A live/upcoming broadcast belongs in YouTube's native player even
         // when this client cannot supply playable streams for it.
         if (info.isLive || info.isUpcoming) return info;
-        if (info.ok && (info.hls || info.videoFormats.length)) return info;
-        first ??= info;
+        if (playable(info)) return info;
+        // Keep a meaningful rejection instead of an OK response with no URLs,
+        // or a transport error that masks the server's later explanation.
+        if (!first || first instanceof Error || (first.ok && !info.ok)) first = info;
       } catch (e) {
         if (!first) first = e;
       }
     }
     if (first instanceof Error) throw first;
-    return first;
+    return first || { ok: false, reason: "None of YouTube's available streams could be played." };
   }
 
   globalThis.YLP = Object.assign(globalThis.YLP || {}, { getPlayer });
