@@ -18,6 +18,25 @@ Use a macOS version supported by Xcode. The checked-in project currently uses th
 27 SDK and an app deployment target of macOS 27.0, and has been built with Xcode 27.1;
 these instructions do not establish compatibility with older macOS versions.
 
+To download and open the source using Finder:
+
+1. Open the [repository page](https://github.com/mindingulove/yt-local-player).
+2. Click the green **Code** button, then **Download ZIP**. This downloads the source project;
+   the Safari app ZIP under Releases does not contain the Xcode project.
+3. In **Finder → Downloads**, double-click the downloaded ZIP to extract it. Open the
+   extracted **yt-local-player-main** folder (the name can differ for another branch).
+4. Inside it, open the **YT Local Player** folder.
+5. Double-click **YT Local Player.xcodeproj**. This is the file to open in Xcode. Finder
+   treats it as a single project file even though it is stored as a directory on disk.
+6. Continue with Apple ID sign-in in step 2 below. Opening the project does not install
+   the extension; the build/install command in step 4 does that.
+
+The source folder containing **README.md**, **Local.xcconfig.example**, and **scripts** is
+the **repository root** used by the Terminal commands below. To open Terminal there, select
+that folder in Finder and choose **Services → New Terminal at Folder** from its context
+menu (it may be under **Quick Actions**). If you downloaded the ZIP, skip the `git clone`
+and `cd yt-local-player` commands below; your Terminal is already in the source folder.
+
 In Terminal, check that the full Xcode installation is selected:
 
 ```sh
@@ -31,7 +50,7 @@ If it reports that only Command Line Tools are selected, select your Xcode insta
 sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
 ```
 
-Clone the repository and enter its directory, or open an existing checkout in Terminal:
+Alternatively, download the source using Terminal instead of the ZIP:
 
 ```sh
 git clone https://github.com/mindingulove/yt-local-player.git

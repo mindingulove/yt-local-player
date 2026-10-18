@@ -89,6 +89,11 @@ works for personal use. The guide covers Xcode installation, Apple ID sign-in, c
 Apple Development certificate, finding your team ID, compiling, installing, and checking
 both signatures. This route does not require Safari's **Allow unsigned extensions** option.
 
+**Which file do I open?** Download the source with **Code → Download ZIP** on GitHub and
+extract it. In Finder, open the extracted folder, open **YT Local Player**, then double-click
+**YT Local Player.xcodeproj** to open the project in Xcode. Read the linked guide first;
+the build/install command is run in Terminal from the extracted folder containing this README.
+
 The Safari ZIP in Releases is **ad-hoc signed**, so that download still needs Safari's
 unsigned-extension option. Signing in to Xcode alone does not sign an already-downloaded app;
 build from source using the guide. Sharing a normally installable app with other people
