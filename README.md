@@ -83,19 +83,16 @@ All of these can be switched on or off in the toolbar popup.
 
 ## Setup (Safari, macOS)
 
-Requires Xcode and a free Apple ID.
+To build and sign the extension for your own Mac with your own Apple ID (Apple Account),
+follow **[Build and sign for Safari on macOS](docs/macos-signing.md)**. A free Personal Team
+works for personal use. The guide covers Xcode installation, Apple ID sign-in, creating an
+Apple Development certificate, finding your team ID, compiling, installing, and checking
+both signatures. This route does not require Safari's **Allow unsigned extensions** option.
 
-1. Copy `Local.xcconfig.example` to `Local.xcconfig` and fill in your Apple team ID
-   (Xcode → Settings → Accounts; a free Personal Team works) and a bundle-ID prefix.
-2. Run `scripts/install-safari.sh`. It builds a signed app, installs it to `/Applications`
-   and launches it once so Safari registers the extension.
-3. In Safari, go to **Settings → Extensions**, enable **YT Local Player** and allow it on
-   youtube.com.
-
-Re-run `scripts/install-safari.sh` after changing anything in `extension/`, or if the free
-certificate expires, then reload YouTube. Avoid ⌘R in Xcode: it registers a second Debug copy,
-and Safari then lists the extension twice. New files in `extension/` must be added to the
-Xcode project (or re-run `safari-web-extension-converter`).
+The Safari ZIP in Releases is **ad-hoc signed**, so that download still needs Safari's
+unsigned-extension option. Signing in to Xcode alone does not sign an already-downloaded app;
+build from source using the guide. Sharing a normally installable app with other people
+requires distribution signing, as explained there.
 
 ## Setup (Chrome / Firefox)
 
