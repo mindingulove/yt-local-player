@@ -109,7 +109,7 @@ All of these can be switched on or off in the toolbar popup.
 1. On the [v2.0.5 release page](https://github.com/mindingulove/yt-local-player/releases/tag/v2.0.5),
    download **YT-Local-Player-Safari.zip** and extract it.
 2. Move **YT Local Player.app** into **Applications** and open it once. This build requires
-   **macOS 27.0+** and is ad-hoc signed, not Apple Developer-signed or notarized; macOS may
+   **Apple Silicon (arm64), macOS 27.0+** and is ad-hoc signed, not Apple Developer-signed or notarized; macOS may
    block it. Follow the release page's installation guidance.
 3. In **Safari → Settings → Advanced**, enable **Show features for web developers**.
    Then, under **Settings → Developer** (or the **Develop** menu), enable **Allow unsigned
