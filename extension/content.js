@@ -424,6 +424,9 @@
     if (!info.hls && !YLP.playableVideoFormats(info).length) {
       return showError("No playable formats for this video.", null, btnHelper());
     }
+    try { await YLP.loadHlsPlaylist(info); }
+    catch (e) { console.warn("[YT Local Player] Could not read HLS quality choices:", e.message); }
+    if (token !== playToken || id !== currentId || !overlay) return;
     buildToolbar();
     overlay.controls.setStoryboard(info.storyboard);
     await applyQuality(selectedQuality(), true);
@@ -432,7 +435,10 @@
 
   // Heights offered in the quality menu ("auto" = Safari's adaptive HLS).
   function qualityChoices() {
-    const heights = [...new Set(YLP.playableVideoFormats(info).map((f) => f.height))];
+    const heights = [...new Set([
+      ...YLP.playableVideoFormats(info).map((f) => f.height),
+      ...(YLP.hlsVideoVariants?.(info, overlay?.audioTrackId) || []).map((v) => v.height),
+    ])].sort((a, b) => b - a);
     return info.hls ? ["auto", ...heights] : heights;
   }
 
@@ -446,7 +452,7 @@
     return heights.find((h) => h <= want) ?? heights[heights.length - 1] ?? (info.hls ? "auto" : undefined);
   }
 
-  async function applyQuality(q, initial = false) {
+  async function applyQuality(q, initial = false, forceDash = false) {
     const token = ++playToken;
     const video = overlay.video;
     const at = initial ? startTimeFromUrl() : video.currentTime;
@@ -457,20 +463,24 @@
     dash = null;
     overlay.hls?.destroy();
     overlay.hls = null;
-    if (q === "auto") {
+    const hlsVariant = YLP.hlsVideoVariants(info, overlay.audioTrackId).find((v) => v.height === q);
+    if (!forceDash && (q === "auto" || hlsVariant)) {
       video.addEventListener(
         "error",
         () => {
           // HLS failed: fall back to the best fixed quality.
           if (token !== playToken || !overlay) return;
-          const fixed = qualityChoices().find((c) => c !== "auto");
-          if (fixed) applyQuality(fixed, initial);
+          overlay.triedHls = true;
+          const fixed = YLP.playableVideoFormats(info).find((f) => f.height === q) || YLP.playableVideoFormats(info)[0];
+          if (fixed) applyQuality(fixed.height, initial, true);
           else if (!tryNextClient()) showError("Safari couldn't play this video.", overlay.video.error?.message, btnRetry(), btnHelper());
         },
         { once: true }
       );
-      if (video.canPlayType("application/vnd.apple.mpegurl") && !selectHlsAudio) {
-        video.src = info.hls; // Safari: native HLS
+      // A variant with AUDIO="..." can be video-only: its audio URI lives
+      // in the master. Keep that master in hls.js when fixing its resolution.
+      if (video.canPlayType("application/vnd.apple.mpegurl") && !selectHlsAudio && !hlsVariant?.audioGroup) {
+        video.src = hlsVariant?.uri || info.hls; // fixed native HLS or adaptive master
       } else if (globalThis.Hls?.isSupported()) {
         // hls.js handles Chrome/Firefox and language-filtered Safari streams.
         // Workers stay off because the page's CSP can block blob workers.
@@ -480,6 +490,11 @@
           ...(selectHlsAudio ? { pLoader: YLP.audioPlaylistLoader(Hls, audioTrack) } : {}),
         });
         overlay.hls = hls;
+        if (q !== "auto") hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (token !== playToken || !overlay) return;
+          const index = hls.levels.findIndex((level) => level.height === q);
+          if (index >= 0) hls.currentLevel = index;
+        });
         hls.on(Hls.Events.ERROR, (_e, data) => {
           if (data.fatal && token === playToken && overlay) video.dispatchEvent(new Event("error"));
         });
@@ -530,6 +545,7 @@
       overlay.audioTrackId || "default",
       (id) => {
         overlay.audioTrackId = id === "default" ? null : id;
+        buildToolbar();
         applyQuality(selectedQuality());
       }
     );
