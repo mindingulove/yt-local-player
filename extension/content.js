@@ -13,6 +13,7 @@
     captions: "off",
     hideAds: true,
     hideShorts: true,
+    returnDislike: true,
     sponsorBlock: true,
     sbCategories: ["sponsor", "selfpromo", "interaction"],
     sbMode: "auto", // "auto" skips; "ask" shows a Skip button
@@ -587,11 +588,53 @@
     const mini = pill("mini", "Mini player (i)", { iconOnly: true, onclick: () => enterMini() });
     const addSegment = pill("add", "Submit a SponsorBlock segment", { iconOnly: true, onclick: openSubmitPanel, hidden: !settings.sponsorBlock });
     overlay.sbSlot = h("span", { class: "ylp-sb" });
-    overlay.toolbar.replaceChildren(overlay.sbSlot, quality.wrap, audio.wrap, cc.wrap, mini, addSegment, overlay.saveBtn, overlay.saveLabel);
+    overlay.dislikeSlot = h("span", { class: "ylp-dislikes" });
+    overlay.toolbar.replaceChildren(overlay.sbSlot, overlay.dislikeSlot, quality.wrap, audio.wrap, cc.wrap, mini, addSegment, overlay.saveBtn, overlay.saveLabel);
+    loadDislikes();
     renderSponsorUi();
     overlay.toolbar.hidden = false;
     placeToolbar();
     renderSaveButton();
+  }
+
+  // ---- Return YouTube Dislike ---------------------------------------------
+
+  function renderDislikes() {
+    const slot = overlay?.dislikeSlot;
+    if (!slot) return;
+    slot.hidden = !settings.returnDislike;
+    if (slot.hidden) { slot.replaceChildren(); return; }
+    const count = overlay.dislikeVotes?.dislikes;
+    const available = Number.isSafeInteger(count) && count >= 0;
+    const label = available
+      ? `👎 ≈${new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 }).format(count)}`
+      : overlay.dislikeLoading ? "👎 …" : "👎 —";
+    const title = available
+      ? `Estimated dislikes: ${new Intl.NumberFormat().format(count)}. Data from Return YouTube Dislike; click for details.`
+      : `Return YouTube Dislike: ${overlay.dislikeLoading ? "loading estimated count" : "count unavailable"}. Click for details.`;
+    const link = h("a", {
+      class: "ylp-pill ylp-dislike", href: "https://returnyoutubedislike.com/",
+      target: "_blank", rel: "noopener noreferrer", title,
+    }, label);
+    link.setAttribute("aria-label", title);
+    slot.replaceChildren(link);
+  }
+
+  async function loadDislikes() {
+    if (!settings.returnDislike || !overlay || !currentId) { renderDislikes(); return; }
+    const target = overlay;
+    if (target.dislikeLoaded || target.dislikeLoading) { renderDislikes(); return; }
+    target.dislikeLoading = true;
+    renderDislikes();
+    let votes;
+    try { votes = await browser.runtime.sendMessage({ type: "returnDislike", videoId: currentId }); }
+    catch { votes = null; }
+    // An old video's response must never update the next video or a replacement overlay.
+    if (overlay !== target) return;
+    target.dislikeVotes = votes;
+    target.dislikeLoading = false;
+    target.dislikeLoaded = true;
+    renderDislikes();
   }
 
   // ---- captions ----------------------------------------------------------
@@ -1325,6 +1368,7 @@
     for (const [k, c] of Object.entries(changes)) settings[k] = c.newValue;
     applyPageSettings();
     if (changes.saveEnabled) renderSaveButton();
+    if (changes.returnDislike) loadDislikes();
     if ((changes.sponsorBlock || changes.sbCategories || changes.sbExtras) && overlay && currentId) loadSponsorSegments(currentId);
     // Quality/caption changes are applied live by the toolbar; only restart for these.
     if (changes.enabled || changes.source) {

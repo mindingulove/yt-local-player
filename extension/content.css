@@ -54,6 +54,9 @@
   background: var(--ylp-chip); color: inherit; font: inherit; cursor: pointer; white-space: nowrap;
 }
 .ylp-toolbar .ylp-pill:hover { background: var(--ylp-chip-hover); }
+.ylp-toolbar .ylp-dislikes { display: inline-flex; flex: none; }
+.ylp-toolbar .ylp-dislikes[hidden] { display: none; }
+.ylp-toolbar .ylp-dislike { text-decoration: none; }
 .ylp-toolbar .ylp-pill[hidden] { display: none; }
 .ylp-toolbar .ylp-pill svg { width: 24px; height: 24px; fill: currentColor; flex: none; }
 .ylp-toolbar .ylp-icon-btn { width: 40px; padding: 0; justify-content: center; }

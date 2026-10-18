@@ -3,10 +3,59 @@ globalThis.browser ??= globalThis.chrome; // Chrome exposes the same API as chro
 
 const HELPER = "http://127.0.0.1:8765";
 const SPONSORBLOCK = "https://sponsor.ajay.app/api";
+const RYD = "https://returnyoutubedislikeapi.com/votes";
+const dislikeCache = new Map();
+const dislikePending = new Map();
+let dislikeBackoffUntil = 0;
+
+async function getDislikes(videoId) {
+  if (typeof videoId !== "string" || !/^[\w-]{11}$/.test(videoId)) return { error: "invalid video ID" };
+  const cached = dislikeCache.get(videoId);
+  if (cached?.expires > Date.now()) return cached.value;
+  if (Date.now() < dislikeBackoffUntil) return { error: "rate limited" };
+  if (dislikePending.has(videoId)) return dislikePending.get(videoId);
+  const request = (async () => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    let value;
+    try {
+      const response = await fetch(`${RYD}?videoId=${encodeURIComponent(videoId)}`, {
+        credentials: "omit", referrerPolicy: "no-referrer", signal: controller.signal,
+      });
+      if (response.status === 429) {
+        const retry = response.headers.get("Retry-After");
+        const seconds = Number(retry);
+        const delay = retry && Number.isFinite(seconds) ? seconds * 1000 : Date.parse(retry) - Date.now();
+        dislikeBackoffUntil = Date.now() + Math.max(60000, Number.isFinite(delay) ? delay : 60000);
+        throw new Error("rate limited");
+      }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const votes = await response.json();
+      if (votes.deleted || votes.id !== videoId || !Number.isSafeInteger(votes.dislikes) || votes.dislikes < 0) {
+        throw new Error("counts unavailable");
+      }
+      value = { dislikes: votes.dislikes };
+    } catch (error) {
+      value = { error: String(error.message || error) };
+    } finally {
+      clearTimeout(timer);
+    }
+    // Cache failures briefly too; rebuilding the toolbar must not hammer the API.
+    dislikeCache.set(videoId, { value, expires: Date.now() + (value.error ? 60000 : 600000) });
+    if (dislikeCache.size > 200) dislikeCache.delete(dislikeCache.keys().next().value);
+    return value;
+  })();
+  dislikePending.set(videoId, request);
+  try { return await request; }
+  finally { dislikePending.delete(videoId); }
+}
 
 // Returns a promise for messages that expect an answer, else undefined.
 function handle(msg) {
   switch (msg?.type) {
+    case "returnDislike":
+      return getDislikes(msg.videoId);
+
     // Local yt-dlp helper.
     case "helper":
       return fetch(`${HELPER}${msg.path}`)

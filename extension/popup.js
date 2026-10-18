@@ -3,6 +3,7 @@ const DEFAULTS = {
   source: "browser",
   hideAds: true,
   hideShorts: true,
+  returnDislike: true,
   sponsorBlock: true,
   sbCategories: ["sponsor", "selfpromo", "interaction"],
   sbMode: "auto",
@@ -34,7 +35,7 @@ function checkHelper() {
 }
 
 browser.storage.local.get(DEFAULTS).then((s) => {
-  for (const id of ["enabled", "hideAds", "hideShorts", "saveEnabled", "sponsorBlock", "sbExtras"]) {
+  for (const id of ["enabled", "hideAds", "hideShorts", "returnDislike", "saveEnabled", "sponsorBlock", "sbExtras"]) {
     $(id).checked = s[id];
     $(id).addEventListener("change", () => {
       save({ [id]: $(id).checked });
