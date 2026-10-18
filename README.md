@@ -123,13 +123,13 @@ All of these can be switched on or off in the toolbar popup.
 To build and sign the extension for your own Mac with your own Apple ID (Apple Account),
 follow **[Build and sign for Safari on macOS](docs/macos-signing.md)**. A free Personal Team
 works for personal use. The guide covers Xcode installation, Apple ID sign-in, creating an
-Apple Development certificate, finding your team ID, compiling, installing, and checking
-both signatures. This route does not require Safari's **Allow unsigned extensions** option.
+Apple Development certificate, configuring both targets, building, installing, and checking
+the result in Safari. The main workflow uses **Xcode and Finder only; Terminal is optional**. This route does not require Safari's **Allow unsigned extensions** option.
 
 **Which file do I open?** Download the source with **Code → Download ZIP** on GitHub and
 extract it. In Finder, open the extracted folder, open **YT Local Player**, then double-click
 **YT Local Player.xcodeproj** to open the project in Xcode. Read the linked guide first;
-the build/install command is run in Terminal from the extracted folder containing this README.
+then follow the guide to build in Xcode and move the app into Applications using Finder.
 
 Build from source using the guide. Sharing a normally installable Safari app with other
 people requires distribution signing, as explained there.
