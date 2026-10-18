@@ -7,7 +7,12 @@
 
 ![YT Local Player on a YouTube watch page: custom controls, the toolbar between Subscribe and Like/Share, and the settings popup](docs/screenshot.jpg)
 
-**[Download the latest release](https://github.com/mindingulove/yt-local-player/releases/latest)** for Chrome, Firefox or Safari.
+**[Download v2.0.4](https://github.com/mindingulove/yt-local-player/releases/tag/v2.0.4)** for Chrome, Firefox or Safari.
+These are **unsigned/manual-install packages**: Chrome requires Developer mode and Load
+unpacked; Firefox is not Mozilla-signed and requires Load Temporary Add-on; Safari is
+ad-hoc signed, **not Apple Developer-signed or notarized**, and requires Allow unsigned
+extensions. For Safari without that option, follow the
+**[step-by-step guide to building and signing with your own Apple ID](docs/macos-signing.md)**.
 
 A browser extension for Safari, Chrome and Firefox that swaps YouTube's watch-page player for
 its own player. It streams directly from YouTube's video servers, so there are no ads, and it
