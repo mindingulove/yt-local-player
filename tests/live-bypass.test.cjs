@@ -44,7 +44,7 @@ function lifecycle(getPlayer, source = 'browser') {
   const context = vm.createContext({
     YLP: { getPlayer },
     browser: {},
-    document: { documentElement: { dataset: {}, classList: classes }, querySelector: () => player },
+    document: { documentElement: { dataset: {}, classList: classes }, querySelector: () => player, querySelectorAll: () => [] },
     performance: { now: () => 0 },
     clearTimeout, clearInterval, setTimeout,
   });

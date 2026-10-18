@@ -78,63 +78,85 @@ test('RYD handles missing, malformed and failed counts without inventing zero', 
   }
 });
 
-function content(sendMessage) {
+function content(sendMessage, timers = { setTimeout, clearTimeout }) {
   let code = fs.readFileSync(path.join(root, 'extension/content.js'), 'utf8');
   code = code.slice(0, code.indexOf('  // Only one copy of this script'));
   code += `\nglobalThis.dislikes = {
-    load: loadDislikes,
-    set: (next, id) => { overlay = next; currentId = id; },
+    load: loadDislikes, render: renderDislikes,
+    set: (next, id) => { clearDislikes(); overlay = next; currentId = id; },
     enable: (value) => { settings.returnDislike = value; },
   }; })();`;
   const element = () => ({
-    children: [], append(...children) { this.children.push(...children); },
-    replaceChildren(...children) { this.children = children; },
+    children: [], ownText: '',
+    get textContent() { return this.ownText + this.children.map(c => c.textContent || '').join(''); },
+    set textContent(value) { this.ownText = value; this.children = []; },
+    append(...children) { for (const c of children) { c.parent = this; this.children.push(c); } },
+    querySelector() { return this.children.find(c => c.className === 'ylp-native-dislikes') || null; },
+    remove() { if (this.parent) this.parent.children = this.parent.children.filter(c => c !== this); },
     setAttribute(key, value) { this[key] = value; },
   });
+  const button = element();
+  const location = { pathname: '/watch', search: '?v=' + id };
   const context = vm.createContext({
-    browser: { runtime: { sendMessage } }, document: { createElement: element },
+    browser: { runtime: { sendMessage } }, location, URLSearchParams, ...timers,
+    document: {
+      createElement: element, querySelector: () => button,
+      querySelectorAll: () => button.children.filter(c => c.className === 'ylp-native-dislikes'),
+    },
   });
   vm.runInContext(code, context);
-  return { ...context.dislikes, target: () => ({ dislikeSlot: element() }) };
+  return { ...context.dislikes, button, location, count: () => button.querySelector() };
 }
 
-test('dislike chip handles zero, attribution, toggle, unavailable and toolbar rebuild', async () => {
+test('RYD annotates only the native dislike button; handles zero, toggle and unavailable', async () => {
   let requests = 0;
   const app = content(async () => { requests++; return { dislikes: 0 }; });
-  const target = app.target();
-  app.set(target, id);
+  app.set({}, id);
   app.enable(false);
   await app.load();
   assert.equal(requests, 0);
-  assert.equal(target.dislikeSlot.hidden, true);
+  assert.equal(app.count(), null);
   app.enable(true);
   await app.load();
-  const link = target.dislikeSlot.children[0];
-  assert.match(link.children[0], /≈0/);
-  assert.equal(link.href, 'https://returnyoutubedislike.com/');
-  assert.match(link['aria-label'], /Estimated dislikes: 0/);
-  target.dislikeSlot = app.target().dislikeSlot;
+  assert.match(app.count().textContent, /≈ 0/);
+  assert.match(app.count()['aria-label'], /Estimated dislikes: 0/);
   await app.load();
   assert.equal(requests, 1);
-  assert.match(target.dislikeSlot.children[0].children[0], /≈0/);
   app.enable(false);
   await app.load();
-  assert.equal(target.dislikeSlot.children.length, 0);
+  assert.equal(app.count(), null);
   const failed = content(async () => { throw new Error('offline'); });
-  const unavailable = failed.target();
-  failed.set(unavailable, id);
+  failed.set({}, id);
   await failed.load();
-  assert.match(unavailable.dislikeSlot.children[0].children[0], /—/);
+  assert.equal(failed.count().textContent, '—');
 });
 
-test('late RYD responses cannot update a new overlay or show a disabled count', async () => {
+test('RYD leaves existing native counts untouched and restores after YouTube rebuilds the button', async () => {
+  const app = content(async () => ({ dislikes: 3400 }));
+  app.button.ownText = '3.4K';
+  app.set({}, id);
+  await app.load();
+  assert.equal(app.count(), null, 'do not duplicate an already working count');
+  assert.equal(app.button.textContent, '3.4K');
+  app.button.ownText = '';
+  app.render();
+  assert.match(app.count().textContent, /3.4/);
+  app.count().remove();
+  app.render();
+  assert.match(app.count().textContent, /3.4/);
+  app.button.ownText = '3.4K';
+  app.render();
+  assert.equal(app.count(), null);
+});
+
+test('late RYD responses cannot update a new video, mini-player page, or disabled count', async () => {
   let resolve;
   const app = content(() => new Promise((r) => { resolve = r; }));
-  const old = app.target();
-  app.set(old, id);
+  app.set({}, id);
   const pending = app.load();
-  const next = app.target();
+  const next = {};
   app.set(next, '12345678901');
+  app.location.search = '?v=12345678901';
   resolve({ dislikes: 10 });
   await pending;
   assert.equal(next.dislikeVotes, undefined);
@@ -142,6 +164,26 @@ test('late RYD responses cannot update a new overlay or show a disabled count', 
   app.enable(false);
   resolve({ dislikes: 20 });
   await current;
-  assert.equal(next.dislikeSlot.hidden, true);
-  assert.equal(next.dislikeSlot.children.length, 0);
+  assert.equal(app.count(), null);
+  app.enable(true);
+  app.location.pathname = '/';
+  app.render();
+  assert.equal(app.count(), null);
+});
+
+
+test('unanswered background messages stop showing loading after the content timeout', async () => {
+  let expire;
+  const app = content(() => new Promise(() => {}), {
+    setTimeout: (callback, ms) => { assert.equal(ms, 12000); expire = callback; return 1; },
+    clearTimeout() {},
+  });
+  const target = {};
+  app.set(target, id);
+  const pending = app.load();
+  assert.equal(app.count().textContent, '…');
+  expire();
+  await pending;
+  assert.equal(target.dislikeLoading, false);
+  assert.equal(app.count().textContent, '—');
 });

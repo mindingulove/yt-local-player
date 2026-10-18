@@ -133,3 +133,19 @@ test('failed page and web streams can advance to another client without reusing 
   assert.equal((await app.getPlayer('video', { skipClients: ['WEB_PAGE', 'WEB', 'VISIONOS'] })).client, 'IOS');
   assert.equal(app.requests.length, 3);
 });
+
+test('download lookup skips HLS-only results without changing normal playback selection', async () => {
+  const mp4 = {
+    ...playable('video'), streamingData: { adaptiveFormats: [
+      { url: 'https://media.invalid/video', mimeType: 'video/mp4; codecs="avc1"', indexRange: { start: 0, end: 1 }, contentLength: '100', height: 720 },
+      { url: 'https://media.invalid/audio', mimeType: 'audio/mp4', indexRange: { start: 0, end: 1 }, contentLength: '20' },
+    ] },
+  };
+  const app = client((req) => req.body.context.client.clientName === 'WEB' ? playable('video') : mp4, { player: playable('video') });
+  assert.equal((await app.getPlayer('video')).client, 'WEB_PAGE');
+  assert.equal(app.requests.length, 0);
+  const download = await app.getPlayer('video', { requireMp4: true });
+  assert.equal(download.client, 'VISIONOS');
+  assert.equal(download.videoFormats.length, 1);
+  assert.equal(download.audioFormats.length, 1);
+});

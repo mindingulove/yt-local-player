@@ -125,6 +125,7 @@
   }
 
   function teardown() {
+    clearDislikes();
     document.documentElement.classList.remove("ylp-mini-active");
     clearTimeout(pollTimer);
     clearInterval(suppressTimer);
@@ -280,6 +281,7 @@
       el.classList.toggle("ylp-dark", dark);
     }
     maybeShowScrollHint();
+    renderDislikes();
   }
 
   // First time the bar overflows, nudge it and show a tip until "Got it".
@@ -584,12 +586,11 @@
     overlay.ccSync = cc.sync;
 
     overlay.saveLabel = h("span", { class: "ylp-save-progress" });
-    overlay.saveBtn = pill("download", "Save as mp4", { iconOnly: true, onclick: save });
+    overlay.saveBtn = pill("download", "Save", { onclick: save });
     const mini = pill("mini", "Mini player (i)", { iconOnly: true, onclick: () => enterMini() });
     const addSegment = pill("add", "Submit a SponsorBlock segment", { iconOnly: true, onclick: openSubmitPanel, hidden: !settings.sponsorBlock });
     overlay.sbSlot = h("span", { class: "ylp-sb" });
-    overlay.dislikeSlot = h("span", { class: "ylp-dislikes" });
-    overlay.toolbar.replaceChildren(overlay.sbSlot, overlay.dislikeSlot, quality.wrap, audio.wrap, cc.wrap, mini, addSegment, overlay.saveBtn, overlay.saveLabel);
+    overlay.toolbar.replaceChildren(overlay.sbSlot, overlay.saveBtn, quality.wrap, audio.wrap, cc.wrap, mini, addSegment, overlay.saveLabel);
     loadDislikes();
     renderSponsorUi();
     overlay.toolbar.hidden = false;
@@ -599,25 +600,38 @@
 
   // ---- Return YouTube Dislike ---------------------------------------------
 
+  function clearDislikes() {
+    document.querySelectorAll(".ylp-native-dislikes").forEach((el) => el.remove());
+  }
+
   function renderDislikes() {
-    const slot = overlay?.dislikeSlot;
-    if (!slot) return;
-    slot.hidden = !settings.returnDislike;
-    if (slot.hidden) { slot.replaceChildren(); return; }
+    if (!settings.returnDislike || !overlay || videoIdFromUrl() !== currentId) { clearDislikes(); return; }
+    const button = document.querySelector(
+      "ytd-watch-metadata dislike-button-view-model button, " +
+      "ytd-watch-metadata #segmented-dislike-button button, " +
+      "ytm-slim-video-action-bar-renderer segmented-dislike-button-view-model button"
+    );
+    if (!button) return;
+    let countEl = button.querySelector(".ylp-native-dislikes");
+    // Another extension (or YouTube itself) may already supply the count.
+    // Leave that count alone instead of displaying two numbers.
+    const nativeText = (button.textContent || "").replace(countEl?.textContent || "", "");
+    if (/\d/.test(nativeText)) { countEl?.remove(); return; }
     const count = overlay.dislikeVotes?.dislikes;
     const available = Number.isSafeInteger(count) && count >= 0;
     const label = available
-      ? `👎 ≈${new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 }).format(count)}`
-      : overlay.dislikeLoading ? "👎 …" : "👎 —";
+      ? `≈ ${new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 }).format(count)}`
+      : overlay.dislikeLoading ? "…" : "—";
     const title = available
-      ? `Estimated dislikes: ${new Intl.NumberFormat().format(count)}. Data from Return YouTube Dislike; click for details.`
-      : `Return YouTube Dislike: ${overlay.dislikeLoading ? "loading estimated count" : "count unavailable"}. Click for details.`;
-    const link = h("a", {
-      class: "ylp-pill ylp-dislike", href: "https://returnyoutubedislike.com/",
-      target: "_blank", rel: "noopener noreferrer", title,
-    }, label);
-    link.setAttribute("aria-label", title);
-    slot.replaceChildren(link);
+      ? `Estimated dislikes: ${new Intl.NumberFormat().format(count)}. Data from Return YouTube Dislike.`
+      : `Return YouTube Dislike: ${overlay.dislikeLoading ? "loading estimated count" : "count unavailable"}.`;
+    if (!countEl) {
+      countEl = h("span", { class: "ylp-native-dislikes" });
+      button.append(countEl);
+    }
+    if (countEl.textContent !== label) countEl.textContent = label;
+    countEl.title = title;
+    countEl.setAttribute("aria-label", title);
   }
 
   async function loadDislikes() {
@@ -627,8 +641,17 @@
     target.dislikeLoading = true;
     renderDislikes();
     let votes;
-    try { votes = await browser.runtime.sendMessage({ type: "returnDislike", videoId: currentId }); }
+    let timeout;
+    try {
+      // A background context can disappear during an extension update without
+      // settling sendMessage. Bound that wait as well as the background fetch.
+      votes = await Promise.race([
+        browser.runtime.sendMessage({ type: "returnDislike", videoId: currentId }),
+        new Promise((_, reject) => { timeout = setTimeout(() => reject(new Error("Dislike lookup timed out")), 12000); }),
+      ]);
+    }
     catch { votes = null; }
+    finally { clearTimeout(timeout); }
     // An old video's response must never update the next video or a replacement overlay.
     if (overlay !== target) return;
     target.dislikeVotes = votes;
@@ -704,21 +727,34 @@
   // ---- Save (download + mux to mp4) ---------------------------------------
 
   // Save follows the quality menu; "auto" saves the best H.264 stream.
-  function saveFormats() {
+  function saveFormats(playerInfo = info, trackId = overlay?.audioTrackId) {
     const q = selectedQuality();
-    const video = (q !== "auto" && info.videoFormats.find((f) => f.height === q)) || info.videoFormats[0];
-    return { video, audio: YLP.audioFormatsForTrack(info, overlay.audioTrackId)[0] };
+    const videos = (playerInfo?.videoFormats || []).filter((f) => +f.contentLength > 0);
+    const video = (q !== "auto" && videos.find((f) => f.height <= q)) || videos[0];
+    return { video, audio: playerInfo?.audioFormats?.length && YLP.audioFormatsForTrack(playerInfo, trackId).find((f) => +f.contentLength > 0) };
   }
 
   function renderSaveButton() {
     const btn = overlay?.saveBtn;
-    if (!btn || saveAbort) return;
-    const { video, audio } = saveFormats();
-    btn.hidden = !settings.saveEnabled || !video || !audio || info.isLive;
+    if (!btn) return;
+    btn.hidden = !settings.saveEnabled && !saveAbort;
     if (btn.hidden) return;
-    const mb = (+video.contentLength + +audio.contentLength) / 1e6;
-    setPillLabel(btn, `Save ${video.height}p as mp4 (${mb.toFixed(0)} MB)`);
+    btn.disabled = false;
+    if (saveAbort) {
+      setPillLabel(btn, "Cancel");
+      btn.title = "Cancel download";
+      btn.classList.add("ylp-busy");
+      return;
+    }
+    const { video, audio } = saveFormats();
+    setPillLabel(btn, "Save");
     btn.classList.remove("ylp-busy");
+    if (!video || !audio) {
+      btn.title = "Save as mp4 — look up downloadable streams";
+      return;
+    }
+    const mb = (+video.contentLength + +audio.contentLength) / 1e6;
+    btn.title = `Save ${video.height}p as mp4 (${mb.toFixed(0)} MB)`;
   }
 
   async function save() {
@@ -726,19 +762,37 @@
       saveAbort.abort();
       return;
     }
-    const { video, audio } = saveFormats();
-    const total = +video.contentLength + +audio.contentLength;
-    const { saveBtn: btn, saveLabel: label } = overlay;
-    saveAbort = new AbortController();
-    const signal = saveAbort.signal;
-    setPillLabel(btn, "Cancel download");
-    btn.classList.add("ylp-busy");
+    const target = overlay;
+    const id = currentId;
+    const sourceInfo = info;
+    const track = YLP.selectedAudioTrack(info, target.audioTrackId);
+    const { saveLabel: label } = target;
+    const controller = new AbortController();
+    saveAbort = controller;
+    const signal = controller.signal;
+    renderSaveButton();
+    let total = 0;
     let got = 0;
     const progress = (n) => {
       got += n;
       label.textContent = `${Math.round((got / total) * 100)}%`;
     };
     try {
+      let { video, audio } = saveFormats();
+      if (!video || !audio) {
+        label.textContent = "Finding download streams…";
+        const downloadInfo = target.downloadInfo || await YLP.getPlayer(id, { requireMp4: true });
+        if (signal.aborted || overlay !== target) throw new DOMException("Cancelled", "AbortError");
+        const downloadTrack = track && (downloadInfo.audioTracks || []).find((t) => t.id === track.id || t.lang === track.lang);
+        if (target.audioTrackId && !downloadTrack) throw new Error("No downloadable streams for the selected audio language.");
+        ({ video, audio } = saveFormats(downloadInfo, downloadTrack?.id));
+        if (!downloadInfo.ok || downloadInfo.isLive || downloadInfo.isUpcoming || !video || !audio) {
+          throw new Error("YouTube provided streaming-only formats; no downloadable MP4 is available for this video.");
+        }
+        target.downloadInfo = downloadInfo;
+      }
+      total = +video.contentLength + +audio.contentLength;
+      label.textContent = "0%";
       const [v, a] = await Promise.all([
         YLP.downloadFormat(video, progress, signal),
         YLP.downloadFormat(audio, progress, signal),
@@ -746,15 +800,16 @@
       label.textContent = "Muxing…";
       const blob = new Blob(YLP.mux(v, a), { type: "video/mp4" });
       const url = URL.createObjectURL(blob);
-      const name = `${info.title.replace(/[\\/:*?"<>|]+/g, "_").slice(0, 150)}.mp4`;
+      if (signal.aborted || overlay !== target) throw new DOMException("Cancelled", "AbortError");
+      const name = `${sourceInfo.title.replace(/[\\/:*?"<>|]+/g, "_").slice(0, 150)}.mp4`;
       h("a", { href: url, download: name }).click();
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
       label.textContent = "Saved ✓";
     } catch (e) {
       label.textContent = e.name === "AbortError" ? "Cancelled" : `Save failed: ${e.message || e}`;
     } finally {
-      saveAbort = null;
-      renderSaveButton();
+      if (saveAbort === controller) saveAbort = null;
+      if (overlay === target) renderSaveButton();
     }
   }
 

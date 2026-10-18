@@ -207,12 +207,14 @@
 
   // Tries each client in order; returns the first playable result (or the
   // first failure, which carries YouTube's reason).
-  async function getPlayer(videoId, { skipClients = [] } = {}) {
+  async function getPlayer(videoId, { skipClients = [], requireMp4 = false } = {}) {
     const visitor = await getVisitorData().catch(() => null);
     // Read again on every navigation: account, visitor and video can change
     // without reloading the document on YouTube.
     const { config, player } = pageData();
-    const playable = (info) => info.ok && (info.hls || (info.videoFormats.length && info.audioFormats.length));
+    const playable = (info) => info.ok && (requireMp4
+      ? info.videoFormats.some((f) => +f.contentLength > 0) && info.audioFormats.some((f) => +f.contentLength > 0)
+      : info.hls || (info.videoFormats.length && info.audioFormats.length));
     if (!skipClients.includes("WEB_PAGE") && player?.videoDetails?.videoId === videoId) {
       // A web HLS manifest can load even while every media segment is denied
       // unless its n signature has been transformed first.
