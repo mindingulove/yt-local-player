@@ -125,3 +125,35 @@ test('Safari uses the filtered HLS loader for multilingual Auto and retains posi
   assert.equal(instances[2].url, splitInfo.hls);
   assert.equal(instances[2].currentLevel, 1);
 });
+
+test('one audio group with every dub keeps only the chosen language as its default', () => {
+  const grouped = `#EXTM3U
+#EXT-X-MEDIA:URI="https://media.invalid/a/xtags/acont%3Ddubbed-auto%3Alang%3Dpt-BR/a.m3u8",TYPE=AUDIO,GROUP-ID="234",LANGUAGE="pt-BR",NAME="Portuguese",DEFAULT=NO,AUTOSELECT=YES
+#EXT-X-MEDIA:URI="https://media.invalid/a/xtags/acont%3Doriginal%3Alang%3Den-US/a.m3u8",TYPE=AUDIO,GROUP-ID="234",LANGUAGE="en-US",NAME="English original",DEFAULT=YES,AUTOSELECT=YES
+#EXT-X-STREAM-INF:BANDWIDTH=250,RESOLUTION=1280x720,AUDIO="234"
+video-only.m3u8
+`;
+  const master = audio.parseHlsMaster(grouped, 'https://media.invalid/master');
+  assert.ok(audio.hlsHasMultipleAudio({ hlsPlaylist: master }));
+  for (const track of [null, tracks[1], { lang: 'en', name: 'English', isDefault: true }]) {
+    const out = audio.filterHlsAudio(grouped, track, 'https://media.invalid/master');
+    assert.ok(!out.includes('pt-BR'), JSON.stringify(track));
+    assert.match(out, /LANGUAGE="en-US".*DEFAULT=YES,AUTOSELECT=YES/);
+    assert.ok(out.includes('video-only.m3u8'));
+  }
+  const pt = audio.filterHlsAudio(grouped, { lang: 'pt-BR', name: 'Portuguese' }, 'https://media.invalid/master');
+  assert.match(pt, /LANGUAGE="pt-BR".*DEFAULT=YES,AUTOSELECT=YES/);
+  assert.ok(!pt.includes('en-US'));
+});
+
+test('without listed audio tracks the original muxed language is preferred over dubs', () => {
+  const muxed = `#EXTM3U
+#EXT-X-STREAM-INF:BANDWIDTH=300,RESOLUTION=1280x720
+https://media.invalid/xtags/acont%3Ddubbed-auto%3Alang%3Des/720.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=250,RESOLUTION=1280x720
+https://media.invalid/xtags/acont%3Doriginal%3Alang%3Den/720.m3u8
+`;
+  const out = audio.filterHlsAudio(muxed, null, 'https://media.invalid/master');
+  assert.ok(out.includes('lang%3Den/') && !out.includes('lang%3Des'));
+  assert.equal(audio.selectedAudioTrack({ audioTracks: [{ id: 'ar.3' }, { id: 'en.4', original: true }] }).id, 'en.4');
+});

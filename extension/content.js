@@ -370,7 +370,16 @@
     const video = overlay.video;
     const go = () => {
       if (at) video.currentTime = at;
-      if (!paused) video.play().catch(() => {}); // autoplay may be refused; controls are visible
+      if (!paused) video.play().catch((e) => {
+        // Safari refuses autoplay with sound unless youtube.com allows it.
+        // Start muted instead and offer to unmute.
+        if (e.name !== "NotAllowedError" || video.muted || overlay?.video !== video) return;
+        video.muted = true;
+        video.play().then(
+          () => showToast("Muted: the browser blocked autoplay with sound", "Unmute", () => (video.muted = false), 15000),
+          () => (video.muted = false)
+        );
+      });
     };
     if (video.readyState >= 1) go();
     else video.addEventListener("loadedmetadata", go, { once: true });
@@ -461,7 +470,7 @@
     const at = initial ? startTimeFromUrl() : video.currentTime;
     const paused = initial ? false : video.paused;
     const audioTrack = YLP.selectedAudioTrack(info, overlay.audioTrackId);
-    const selectHlsAudio = (info.audioTracks?.length || 0) > 1;
+    const selectHlsAudio = (info.audioTracks?.length || 0) > 1 || YLP.hlsHasMultipleAudio(info);
     dash?.destroy();
     dash = null;
     overlay.hls?.destroy();
@@ -689,11 +698,9 @@
     let el = overlay.trackEls.get(track.url);
     if (!el) {
       try {
-        const res = await fetch(track.url, { credentials: "omit" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         // YouTube's VTT pins cues to the left ("align:start position:0%");
         // drop cue settings so Safari centres them like YouTube does.
-        const vtt = (await res.text()).replace(/^(\d[\d:.]* --> [\d:.]+).*$/gm, "$1");
+        const vtt = (await captionText(track)).replace(/^(\d[\d:.]* --> [\d:.]+).*$/gm, "$1");
         const url = URL.createObjectURL(new Blob([vtt], { type: "text/vtt" }));
         el = h("track", { kind: "subtitles", label: track.name, srclang: track.lang, src: url });
         // Lift cues a few lines so they sit above our control bar.
@@ -708,6 +715,22 @@
       }
     }
     if (overlay?.caption === track) el.track.mode = "showing";
+  }
+
+  // Web caption URLs return an empty file without a PO token. The iOS
+  // client's caption URLs don't need one, so fall back to the same track there.
+  async function captionText(track) {
+    const get = async (url) => {
+      const res = await fetch(url, { credentials: "omit" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.text();
+    };
+    const vtt = await get(track.url);
+    if (vtt.includes("-->")) return vtt;
+    info.appCaptions ||= YLP.getAppCaptions(currentId).catch(() => []);
+    const alt = (await info.appCaptions).find((t) => t.lang === track.lang && t.auto === track.auto);
+    if (!alt) throw new Error(`No caption cues for ${track.name}`);
+    return get(alt.url);
   }
 
   // Changing the video source can reset text track modes; re-apply ours.

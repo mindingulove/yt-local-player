@@ -177,7 +177,10 @@
     // Keep every language, including metadata-only tracks used by HLS.
     const audioTracks = [...new Map((sd.adaptiveFormats || []).filter((f) => f.audioTrack).map((f) => {
       const t = f.audioTrack;
-      return [t.id, { id: t.id, lang: t.id.split(".")[0], name: t.displayName || t.id, isDefault: !!t.audioIsDefault, dubbed: !!t.isAutoDubbed }];
+      return [t.id, {
+        id: t.id, lang: t.id.split(".")[0], name: t.displayName || t.id, isDefault: !!t.audioIsDefault, dubbed: !!t.isAutoDubbed,
+        original: /\boriginal\b/i.test(t.displayName || "") || t.id.endsWith(".4"),
+      }];
     })).values()];
     const mp4Audio = adaptive
       .filter((f) => f.mimeType.startsWith("audio/mp4") && f.indexRange)
@@ -259,5 +262,13 @@
     return first || { ok: false, reason: "None of YouTube's available streams could be played." };
   }
 
-  globalThis.YLP = Object.assign(globalThis.YLP || {}, { getPlayer });
+  // Caption tracks as listed for the iOS client, whose timedtext URLs work
+  // without the PO token that web caption URLs now require.
+  async function getAppCaptions(videoId) {
+    const visitor = await getVisitorData().catch(() => null);
+    const ios = CLIENTS.find((c) => c.context.clientName === "IOS");
+    return parse(videoId, await requestPlayer(videoId, ios, visitor)).captions;
+  }
+
+  globalThis.YLP = Object.assign(globalThis.YLP || {}, { getPlayer, getAppCaptions });
 })();

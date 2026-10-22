@@ -2,7 +2,7 @@
 (() => {
   function selectedAudioTrack(info, id) {
     const tracks = info.audioTracks || [];
-    return tracks.find((t) => t.id === id) || tracks.find((t) => t.isDefault) || tracks[0] || null;
+    return tracks.find((t) => t.id === id) || tracks.find((t) => t.isDefault) || tracks.find((t) => t.original) || tracks[0] || null;
   }
 
   function audioFormatsForTrack(info, id) {
@@ -10,12 +10,34 @@
     return info.audioFormats.filter((f) => track ? f.audioTrack?.id === track.id : !f.audioTrack);
   }
 
-  function variantLanguage(uri) {
-    let text = uri;
+  function decoded(text) {
     for (let i = 0; i < 3; i++) {
       try { text = decodeURIComponent(text); } catch { break; }
     }
-    return text.match(/(?:^|[^a-z])lang[=:]([a-zA-Z0-9-]+)/)?.[1] || null;
+    return text;
+  }
+
+  const variantLanguage = (uri) => decoded(uri).match(/(?:^|[^a-z])lang[=:]([a-zA-Z0-9-]+)/)?.[1] || null;
+  const isOriginal = (text) => /acont[=:]original/.test(decoded(text));
+  const attr = (line, name) => line.match(new RegExp(`(?:[:,])${name}=(?:"([^"]*)"|([^,]*))`))?.slice(1).find((v) => v != null) ?? null;
+
+  // Language-tagged entries for the chosen track. Without a track (or for the
+  // default one) prefer YouTube's original audio over dubs, so Safari and
+  // hls.js never pick a dub from the system language.
+  function chooseAudio(entries, track) {
+    if (!entries.some((e) => e.lang)) return entries;
+    const lang = track?.lang.toLowerCase();
+    const base = lang?.split("-")[0];
+    const exact = lang ? entries.filter((e) => e.lang?.toLowerCase() === lang) : [];
+    if (exact.length) return exact;
+    const near = lang ? entries.filter((e) => e.lang?.toLowerCase().split("-")[0] === base) : [];
+    if (near.length) return near;
+    if (track && !track.isDefault) return [];
+    for (const pick of [(e) => e.original, (e) => e.isDefault, (e) => !e.lang]) {
+      const chosen = entries.filter(pick);
+      if (chosen.length) return chosen;
+    }
+    return track ? [] : entries;
   }
 
   // YouTube muxes each language into its own set of video variants. Leaving
@@ -24,6 +46,7 @@
     const lines = manifest.split(/\r?\n/);
     const variants = [];
     const headers = [];
+    const media = [];
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       if (line.startsWith("#EXT-X-STREAM-INF:")) {
@@ -36,26 +59,65 @@
           height: +(line.match(/(?:^|,)RESOLUTION=\d+x(\d+)/)?.[1] || 0),
           bandwidth: +(line.match(/BANDWIDTH=(\d+)/)?.[1] || 0),
           audioGroup: line.match(/(?:^|,)AUDIO="([^"]+)"/)?.[1] || null,
+          original: isOriginal(line + uri),
+        });
+      } else if (line.startsWith("#EXT-X-MEDIA:") && attr(line, "TYPE") === "AUDIO") {
+        // One audio group can hold every dub; keep its renditions apart so
+        // they can be filtered like the muxed variants.
+        const contentId = attr(line, "YT-EXT-AUDIO-CONTENT-ID");
+        media.push({
+          line, group: attr(line, "GROUP-ID"),
+          lang: attr(line, "LANGUAGE") || contentId?.split(".")[0] || variantLanguage(attr(line, "URI") || ""),
+          original: isOriginal(line),
+          isDefault: attr(line, "DEFAULT") === "YES",
         });
       } else if (!line.startsWith("#EXT-X-I-FRAME-STREAM-INF:")) headers.push(line);
     }
-    return { variants, headers };
+    return { variants, headers, media };
   }
 
   function selectVariants(variants, track) {
+    const selected = chooseAudio(variants, track);
+    if (selected.length) return selected;
     if (!track) return variants;
-    const exact = variants.filter((v) => v.lang?.toLowerCase() === track.lang.toLowerCase());
-    const selected = exact.length ? exact : (track.isDefault || !variants.some((v) => v.lang) ? variants.filter((v) => !v.lang) : []);
-    if (!selected.length) throw new Error(`No HLS streams for ${track.name}`);
-    return selected;
+    throw new Error(`No HLS streams for ${track.name}`);
+  }
+
+  // Per audio group, keep the chosen language and make it the group's only
+  // default/autoselect rendition.
+  function selectMedia(media, track) {
+    const groups = new Map();
+    for (const m of media) groups.set(m.group, [...(groups.get(m.group) || []), m]);
+    return [...groups.values()].flatMap((entries) => {
+      const chosen = chooseAudio(entries, track);
+      return (chosen.length ? chosen : entries).map((m, i) => {
+        const flag = i === 0 ? "YES" : "NO";
+        let line = m.line;
+        for (const name of ["DEFAULT", "AUTOSELECT"]) {
+          line = attr(line, name) != null ? line.replace(new RegExp(`([:,])${name}=[^,]*`), `$1${name}=${flag}`) : `${line},${name}=${flag}`;
+        }
+        return line;
+      });
+    });
+  }
+
+  // True when the master mixes languages, even if the player response
+  // listed no audio tracks.
+  function hlsHasMultipleAudio(info) {
+    const { variants = [], media = [] } = info.hlsPlaylist || {};
+    return new Set([...variants, ...media].map((e) => e.lang?.toLowerCase()).filter(Boolean)).size > 1;
   }
 
   function filterHlsAudio(manifest, track, baseUrl) {
-    if (!track) return manifest;
-    const { variants, headers } = parseHlsMaster(manifest, baseUrl);
+    const { variants, headers, media } = parseHlsMaster(manifest, baseUrl);
     // Media playlists already contain just one language.
     if (!variants.length) return manifest;
-    return [...headers.filter(Boolean), ...selectVariants(variants, track).flatMap((v) => [v.header, v.uri]), ""].join("\n");
+    return [
+      ...headers.filter(Boolean),
+      ...selectMedia(media, track),
+      ...selectVariants(variants, track).flatMap((v) => [v.header, v.uri]),
+      "",
+    ].join("\n");
   }
 
   async function loadHlsPlaylist(info) {
@@ -94,5 +156,5 @@
     };
   }
 
-  globalThis.YLP = Object.assign(globalThis.YLP || {}, { selectedAudioTrack, audioFormatsForTrack, filterHlsAudio, audioPlaylistLoader, parseHlsMaster, loadHlsPlaylist, hlsVideoVariants });
+  globalThis.YLP = Object.assign(globalThis.YLP || {}, { selectedAudioTrack, audioFormatsForTrack, filterHlsAudio, hlsHasMultipleAudio, audioPlaylistLoader, parseHlsMaster, loadHlsPlaylist, hlsVideoVariants });
 })();
