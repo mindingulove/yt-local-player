@@ -207,7 +207,7 @@ html.ylp-mini-active .ylp-toolbar.ylp-docked { display: none !important; }
   background: linear-gradient(to right, #fff var(--v, 100%), rgba(255,255,255,.3) var(--v, 100%));
   transition: width .15s, opacity .15s, margin .15s;
 }
-#ylp-overlay .ylp-vol:hover .ylp-volume, #ylp-overlay .ylp-volume:focus-visible { width: 64px; margin: 0 8px 0 2px; opacity: 1; }
+#ylp-overlay .ylp-vol:hover .ylp-volume, #ylp-overlay .ylp-vol-dragging .ylp-volume, #ylp-overlay .ylp-volume:focus-visible { width: 64px; margin: 0 8px 0 2px; opacity: 1; }
 #ylp-overlay .ylp-volume::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 0; }
 #ylp-overlay .ylp-volume::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 0; }
 #ylp-overlay .ylp-spacer { flex: 1; }

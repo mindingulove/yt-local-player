@@ -174,7 +174,7 @@
     // Restore the last volume the user chose (the controls save it).
     try {
       const saved = parseFloat(localStorage.getItem("ylp-volume"));
-      if (saved >= 0 && saved <= 1) video.volume = saved;
+      if (saved > 0 && saved <= 1) video.volume = saved; // 0 was saved by an old slider bug
     } catch {}
     const status = h("div", { class: "ylp-status" });
     const toolbar = h("div", { class: "ylp-toolbar", hidden: true });

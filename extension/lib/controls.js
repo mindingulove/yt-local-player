@@ -85,7 +85,14 @@
     const speedBtn = button(null, "Playback speed", cycleSpeed);
     speedBtn.classList.add("ylp-speed");
     speedBtn.textContent = "1×";
-    const volBtn = button("volHigh", "Mute (m)", () => (video.muted = !video.muted));
+    // Last audible volume, restored when unmuting from the button or slider at 0.
+    let lastVolume = video.volume || 1;
+    const volBtn = button("volHigh", "Mute (m)", () => {
+      if (video.muted || video.volume === 0) {
+        if (video.volume === 0) video.volume = lastVolume;
+        video.muted = false;
+      } else video.muted = true;
+    });
     const volSlider = el("input", "ylp-volume");
     volSlider.type = "range";
     volSlider.min = "0";
@@ -95,9 +102,19 @@
     volSlider.addEventListener("input", () => {
       video.volume = Number(volSlider.value);
       video.muted = video.volume === 0;
+      if (video.volume === 0) return; // keep the last audible volume for unmuting
+      lastVolume = video.volume;
       try {
         localStorage.setItem("ylp-volume", String(video.volume));
       } catch {}
+    });
+    // The slider only widens on hover. Keep it open while dragging, or
+    // leaving it collapses the track and Safari reads the value as 0.
+    volSlider.addEventListener("pointerdown", () => {
+      volume.classList.add("ylp-vol-dragging");
+      const end = () => volume.classList.remove("ylp-vol-dragging");
+      document.addEventListener("pointerup", end, { once: true });
+      document.addEventListener("pointercancel", end, { once: true });
     });
     for (const ev of ["click", "pointerdown", "mousedown"]) volSlider.addEventListener(ev, (e) => e.stopPropagation());
     const volume = el("div", "ylp-vol", volBtn, volSlider);
