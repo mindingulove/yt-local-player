@@ -704,8 +704,15 @@
         const url = URL.createObjectURL(new Blob([vtt], { type: "text/vtt" }));
         el = h("track", { kind: "subtitles", label: track.name, srclang: track.lang, src: url });
         // Lift cues a few lines so they sit above our control bar.
+        // Auto-generated cues overlap the next one by a few seconds, which
+        // stacks them; end each cue where the next begins.
         el.addEventListener("load", () => {
-          for (const cue of el.track.cues || []) cue.line = -3;
+          const cues = [...(el.track.cues || [])];
+          cues.forEach((cue, i) => {
+            cue.line = -3;
+            const next = cues[i + 1];
+            if (next && next.startTime > cue.startTime && cue.endTime > next.startTime) cue.endTime = next.startTime;
+          });
         });
         overlay.trackEls.set(track.url, el);
         video.appendChild(el);
